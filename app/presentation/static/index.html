@@ -1,0 +1,3188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nota — Client &amp; Installment Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  :root{
+    --ink:#101828;
+    --ink-soft:#1d2939;
+    --sidebar:#0d1526;
+    --accent:#375DFB;
+    --accent-soft:#EAEFFE;
+    --bg:#F5F6F8;
+    --card:#FFFFFF;
+    --border:#E4E7EC;
+    --text:#101828;
+    --text-muted:#667085;
+    --success:#12B76A;
+    --success-soft:#E7F8F0;
+    --danger:#F04438;
+    --danger-soft:#FDEDEC;
+    --warning:#F79009;
+    --warning-soft:#FEF3E3;
+    --radius:14px;
+    --shadow: 0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.06);
+    --shadow-md: 0 4px 8px -2px rgba(16,24,40,.08), 0 2px 4px -2px rgba(16,24,40,.04);
+  }
+  
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    font-family:'Inter',-apple-system,sans-serif;
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4,.brand,.nav-item span,.stat-value{font-family:'Plus Jakarta Sans',sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  /* Layout shell */
+  .shell{display:flex; min-height:100vh;}
+
+  /* Sidebar */
+  .sidebar{
+    width:248px;
+    background:var(--sidebar);
+    color:#cbd5e1;
+    flex-shrink:0;
+    padding:24px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:28px;
+    position:sticky;
+    top:0;
+    height:100vh;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    color:#fff;
+    font-weight:800;
+    font-size:1.15rem;
+    padding:0 8px;
+  }
+  .brand .mark{
+    width:34px;height:34px;border-radius:9px;
+    background:linear-gradient(135deg,var(--accent),#7C93FF);
+    display:flex;align-items:center;justify-content:center;
+    font-size:1rem;color:#fff;
+    box-shadow: var(--shadow-md);
+  }
+  .brand small{
+    display:block;font-family:'Inter';font-weight:500;font-size:.68rem;color:#8896ab;letter-spacing:.04em;text-transform:uppercase;
+  }
+  .nav{display:flex;flex-direction:column;gap:4px;}
+  .nav-item{
+    display:flex;align-items:center;gap:12px;
+    padding:11px 12px;border-radius:10px;
+    color:#a6b1c3;font-weight:600;font-size:.9rem;
+    cursor:pointer;border:none;background:none;width:100%;text-align:left;
+    transition:background .15s ease,color .15s ease;
+  }
+  .nav-item i{width:18px;text-align:center;color:#6b7690;transition:color .15s ease;}
+  .nav-item:hover{background:rgba(255,255,255,.05);color:#fff;}
+  .nav-item.active{background:var(--accent);color:#fff;}
+  .nav-item.active i{color:#fff;}
+  .sidebar-footer{
+    margin-top:auto;padding:12px;border-radius:10px;
+    background:rgba(255,255,255,.04);
+    font-size:.75rem;color:#8896ab;line-height:1.5;
+  }
+
+  /* Main */
+  .main{flex:1;min-width:0;padding:32px 40px;max-width:1240px;}
+  .topbar{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    margin-bottom:28px;gap:16px;flex-wrap:wrap;
+  }
+  .topbar h1{margin:0 0 4px 0;font-size:1.5rem;font-weight:800;color:var(--ink);}
+  .topbar p{margin:0;color:var(--text-muted);font-size:.9rem;}
+  .topbar .eyebrow{
+    text-transform:uppercase;letter-spacing:.08em;font-size:.7rem;font-weight:700;color:var(--accent);margin-bottom:6px;
+  }
+
+  /* Stat cards */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:26px;}
+  .stat-card{
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+    padding:18px 20px;box-shadow:var(--shadow);position:relative;overflow:hidden;
+  }
+  .stat-card::before{
+    content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--bar-color,var(--accent));
+  }
+  .stat-label{font-size:.76rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em;}
+  .stat-value{font-size:1.7rem;font-weight:800;color:var(--ink);margin-top:6px;}
+  .stat-sub{font-size:.78rem;color:var(--text-muted);margin-top:2px;}
+
+  /* Card */
+  .panel{
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden;
+  }
+  .panel-header{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+    padding:18px 22px;border-bottom:1px solid var(--border);
+  }
+  .panel-header h5{margin:0;font-size:1rem;font-weight:700;display:flex;align-items:center;gap:9px;color:var(--ink);}
+  .panel-header h5 i{color:var(--accent);}
+  .panel-body{padding:22px;}
+
+  /* Form */
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field.full{grid-column:1 / -1;}
+  label{font-size:.82rem;font-weight:600;color:var(--ink-soft);}
+  .hint{font-size:.75rem;color:var(--text-muted);font-weight:400;}
+  input,textarea,select{
+    border:1.5px solid var(--border);border-radius:9px;padding:10px 13px;
+    font-family:'Inter';font-size:.92rem;color:var(--text);background:#fff;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  input:focus,textarea:focus,select:focus{
+    outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);
+  }
+  textarea{resize:vertical;min-height:70px;font-family:'Inter';}
+  .invalid{border-color:var(--danger) !important;}
+  .error-msg{font-size:.75rem;color:var(--danger);min-height:14px;}
+
+  /* Buttons */
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    border:none;border-radius:9px;padding:10px 18px;
+    font-family:'Inter';font-weight:600;font-size:.88rem;cursor:pointer;
+    transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
+  }
+  .btn:active{transform:translateY(1px);}
+  .btn-primary{background:var(--accent);color:#fff;box-shadow:0 1px 2px rgba(55,93,251,.3);}
+  .btn-primary:hover{background:#2c4de0;box-shadow:0 4px 10px rgba(55,93,251,.35);}
+  .btn-ghost{background:transparent;color:var(--text-muted);border:1.5px solid var(--border);}
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+  .btn-icon{
+    width:34px;height:34px;padding:0;justify-content:center;border-radius:8px;
+    background:#F2F4F7;color:var(--text-muted);border:none;
+  }
+  .btn-icon:hover{background:var(--accent-soft);color:var(--accent);}
+  .btn-icon.danger:hover{background:var(--danger-soft);color:var(--danger);}
+  .btn[disabled]{opacity:.65;cursor:not-allowed;}
+
+  /* Search */
+  .search-box{
+    position:relative;min-width:240px;
+  }
+  .search-box i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:.85rem;}
+  .search-box input{padding-left:34px;width:100%;}
+
+  /* Table */
+  table{width:100%;border-collapse:collapse;}
+  thead th{
+    text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;
+    color:var(--text-muted);font-weight:700;padding:10px 14px;border-bottom:1px solid var(--border);
+    background:#FAFBFC;
+  }
+  tbody td{padding:13px 14px;font-size:.88rem;border-bottom:1px solid var(--border);vertical-align:middle;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:#FAFBFF;}
+  .client-cell{display:flex;align-items:center;gap:10px;}
+  .avatar{
+    width:34px;height:34px;border-radius:9px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:.8rem;color:#fff;
+    background:linear-gradient(135deg,var(--accent),#7C93FF);
+  }
+  .client-name{font-weight:600;color:var(--ink);}
+  .client-id{font-size:.75rem;color:var(--text-muted);}
+  .phone-tag{
+    display:inline-block;background:#F2F4F7;color:var(--ink-soft);
+    padding:3px 9px;border-radius:6px;margin:2px 3px 2px 0;font-size:.78rem;font-weight:500;
+  }
+  .addr-cell{max-width:220px;color:var(--text-muted);font-size:.83rem;}
+  .row-actions{display:flex;gap:6px;}
+
+  /* Empty state */
+  .empty-state{text-align:center;padding:60px 20px;color:var(--text-muted);}
+  .empty-state .icon-wrap{
+    width:64px;height:64px;border-radius:16px;background:var(--accent-soft);color:var(--accent);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-size:1.5rem;
+  }
+  .empty-state h4{color:var(--ink);margin:0 0 6px;font-size:1.05rem;}
+  .empty-state p{margin:0 0 16px;font-size:.88rem;}
+
+  /* Skeleton loading */
+  .skeleton-row td{padding:16px 14px;}
+  .skeleton-bar{height:14px;border-radius:6px;background:linear-gradient(90deg,#eef0f3 25%,#f6f7f9 37%,#eef0f3 63%);background-size:400% 100%;animation:shimmer 1.4s ease infinite;}
+  @keyframes shimmer{0%{background-position:100% 0;}100%{background-position:0 0;}}
+
+  /* Toasts */
+  .toast-stack{position:fixed;top:20px;right:20px;z-index:2000;display:flex;flex-direction:column;gap:10px;width:340px;}
+  .toast-item{
+    background:#fff;border-radius:11px;box-shadow:var(--shadow-md);border:1px solid var(--border);
+    padding:13px 16px;display:flex;gap:10px;align-items:flex-start;
+    animation:toastIn .25s ease;border-left:4px solid var(--accent);
+  }
+  .toast-item.success{border-left-color:var(--success);}
+  .toast-item.danger{border-left-color:var(--danger);}
+  .toast-item i{margin-top:2px;}
+  .toast-item.success i{color:var(--success);}
+  .toast-item.danger i{color:var(--danger);}
+  .toast-item .msg{font-size:.86rem;font-weight:500;color:var(--ink);flex:1;}
+  .toast-item .close-toast{background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:.8rem;}
+  @keyframes toastIn{from{opacity:0;transform:translateX(12px);}to{opacity:1;transform:translateX(0);}}
+
+  /* Modal (Bootstrap structure, custom skin) */
+  .modal-content{border-radius:16px;border:none;overflow:hidden;}
+  .modal-header{background:var(--ink);color:#fff;border:none;padding:18px 22px;}
+  .modal-header .modal-title{font-family:'Plus Jakarta Sans';font-weight:700;font-size:1.02rem;display:flex;gap:9px;align-items:center;}
+  .modal-header .btn-close{filter:brightness(0) invert(1);opacity:.8;}
+  .modal-body{padding:22px;}
+  .modal-footer{border-top:1px solid var(--border);padding:16px 22px;}
+
+  /* Confirm delete modal */
+  #confirmModal .modal-body{text-align:center;padding:30px 24px 10px;}
+  #confirmModal .warn-icon{
+    width:56px;height:56px;border-radius:14px;background:var(--danger-soft);color:var(--danger);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:1.3rem;
+  }
+
+  .tab-content{display:none;}
+  .tab-content.active{display:block;}
+
+  /* Modal mechanics (Bootstrap JS toggles these classes; CSS below makes them visible) */
+  .modal{
+    position:fixed;top:0;left:0;width:100%;height:100%;z-index:1055;
+    display:none;outline:0;overflow-x:hidden;overflow-y:auto;
+  }
+  .modal.show{display:block;}
+  .modal.fade .modal-dialog{transition:transform .2s ease-out;transform:translateY(-30px);}
+  .modal.show .modal-dialog{transform:translateY(0);}
+  .modal-dialog{
+    position:relative;width:auto;margin:1.75rem auto;max-width:500px;
+    display:flex;align-items:center;min-height:calc(100% - 3.5rem);
+  }
+  .modal-dialog.modal-lg{max-width:700px;}
+  .modal-content{width:100%;background:#fff;}
+  .modal-backdrop{
+    position:fixed;top:0;left:0;width:100%;height:100%;z-index:1050;
+    background:rgba(16,24,40,.55);
+  }
+  .modal-backdrop.show{opacity:1;}
+  .modal-open{overflow:hidden;}
+  .btn-close{
+    background:transparent url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath stroke='%23000' stroke-linecap='round' stroke-width='2' d='M1 1l14 14M15 1L1 15'/%3e%3c/svg%3e") center/1em auto no-repeat;
+    border:0;width:1em;height:1em;padding:.25em;opacity:.7;cursor:pointer;
+  }
+  .btn-close:hover{opacity:1;}
+
+  @media (max-width:900px){
+    .sidebar{display:none;}
+    .main{padding:20px;}
+    .field-grid{grid-template-columns:1fr;}
+    .stats{grid-template-columns:1fr;}
+  }
+    /* Completed badge */
+  .badge-completed{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:5px 12px 5px 9px;border-radius:999px;
+    background:linear-gradient(135deg,#12B76A,#0E9F5C);
+    color:#fff;font-weight:700;font-size:.74rem;
+    letter-spacing:.02em;
+    box-shadow:0 2px 6px rgba(18,183,106,.35);
+    position:relative;overflow:hidden;
+    animation:completedPop .35s ease;
+  }
+  .badge-completed i{font-size:.78rem;}
+  .badge-completed::after{
+    content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;
+    background:linear-gradient(120deg,transparent,rgba(255,255,255,.55),transparent);
+    transform:skewX(-20deg);
+    animation:completedShine 2.6s ease-in-out infinite;
+  }
+  @keyframes completedShine{
+    0%{left:-60%;}
+    40%{left:130%;}
+    100%{left:130%;}
+  }
+  @keyframes completedPop{
+    0%{transform:scale(.85);opacity:0;}
+    60%{transform:scale(1.05);opacity:1;}
+    100%{transform:scale(1);}
+  }
+
+  /* Late / status badges to match, so Completed doesn't look out of place */
+  .badge-status{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:5px 12px;border-radius:999px;
+    font-weight:700;font-size:.74rem;
+  }
+  .badge-status.late{background:var(--danger-soft);color:var(--danger);}
+  .badge-status.ontime{background:var(--success-soft);color:var(--success);}
+</style>
+</head>
+<body>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<div class="shell">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="mark"><i class="fas fa-layer-group"></i></div>
+      <div>
+       Nota
+        <small>Installment System</small>
+      </div>
+    </div>
+    <nav class="nav">
+      <button class="nav-item active" data-tab="create" onclick="switchTab('create', this)">
+        <i class="fas fa-user-plus"></i><span>New Client</span>
+      </button>
+      <button class="nav-item" data-tab="view" onclick="switchTab('view', this)">
+        <i class="fas fa-users"></i><span>All Clients</span>
+      </button>
+      <button class="nav-item" data-tab="products-create" onclick="switchTab('products-create', this)">
+        <i class="fas fa-box-open"></i><span>New Product</span>
+      </button>
+      <button class="nav-item" data-tab="products-view" onclick="switchTab('products-view', this)">
+        <i class="fas fa-boxes"></i><span>All Products</span>
+      </button>
+      <button class="nav-item" data-tab="contracts-view" onclick="switchTab('contracts-view', this)">
+        <i class="fas fa-file-contract"></i><span>All Contracts</span>
+      </button>
+      <button class="nav-item" data-tab="dashboard-view" onclick="switchTab('dashboard-view', this)">
+        <i class="fas fa-chart-line"></i><span>DashBoard</span>
+      </button>
+      <button class="nav-item" data-tab="balance-view" onclick="switchTab('balance-view', this)">
+        <i class="fas fa-wallet"></i><span>Balance</span>
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <i class="fas fa-circle-info" style="margin-right:6px;"></i>
+      Connected to local API at <span class="mono">127.0.0.1:8000</span>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- App header: profile avatar + logout + balance display -->
+    <header class="app-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:12px">
+        <!-- place for app-level controls or breadcrumbs -->
+      </div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <div id="profileBtn" style="position:relative;">
+          <div id="profileAvatar" class="avatar" style="width:40px;height:40px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;">U</div>
+          <div id="profileMenu" style="position:absolute;right:0;top:48px;display:none;background:#fff;border:1px solid var(--border);box-shadow:var(--shadow);border-radius:8px;min-width:220px;overflow:hidden;z-index:60;">
+            <div style="padding:10px 12px;border-bottom:1px solid var(--border);">
+              <div id="profileName" style="font-weight:700"></div>
+              <div id="profileEmail" style="font-size:.85rem;color:var(--text-muted)"></div>
+            </div>
+            <div style="padding:8px;display:flex;flex-direction:column;gap:6px;">
+              <button id="logoutBtn" class="btn btn-ghost" style="width:100%;text-align:left">Logout</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+   
+
+    <script>
+      (function(){
+        const userStr = sessionStorage.getItem('user');
+        const avatarEl = document.getElementById('profileAvatar');
+        const nameEl = document.getElementById('profileName');
+        const emailEl = document.getElementById('profileEmail');
+        const profileMenu = document.getElementById('profileMenu');
+        const profileBtn = document.getElementById('profileBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        
+        if(!avatarEl) return; // safety when editing partial pages
+
+        function renderUser(u){
+          if(!u) return;
+          // avatar
+          const pictureUrl = u.picture_url || u.picture;
+          if(pictureUrl){
+            avatarEl.style.backgroundImage = `url("${pictureUrl}")`;
+            avatarEl.style.backgroundSize = 'cover';
+            avatarEl.style.backgroundPosition = 'center';
+            avatarEl.textContent = '';
+          } else {
+            const source = u.user_name || u.name || u.email || 'U';
+            const initials = source.split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase();
+            avatarEl.textContent = initials || 'U';
+          }
+          if(nameEl) nameEl.textContent = u.user_name || u.name || '';
+          if(emailEl) emailEl.textContent = u.email || '';
+          
+        }
+
+        if(userStr){
+          try{
+            const user = JSON.parse(userStr);
+            renderUser(user);
+          }catch(e){ /* ignore parse errors */ }
+        } else {
+          avatarEl.textContent = 'U';
+        }
+
+        // Toggle menu
+        if(profileBtn){
+          profileBtn.addEventListener('click', function(e){
+            e.stopPropagation();
+            if(!profileMenu) return;
+            profileMenu.style.display = profileMenu.style.display === 'block' ? 'none' : 'block';
+          });
+        }
+
+        // Close on outside click
+        document.addEventListener('click', function(){ if(profileMenu) profileMenu.style.display = 'none'; });
+
+        // Logout action
+        if(logoutBtn){
+          logoutBtn.addEventListener('click', function(){
+            sessionStorage.clear();
+            window.location.href = 'login.html';
+          });
+        }
+
+       
+        document.addEventListener('keydown', function(e){ if(e.key==='Escape'){  if(profileMenu) profileMenu.style.display='none'; } });
+
+      })();
+    </script>
+
+    <!-- Create Client -->
+    <div id="create" class="tab-content active">
+      <div class="topbar">
+        <div>
+          <div class="eyebrow">Client Records</div>
+          <h1>Create a new client</h1>
+          <p>Add a client and their installment surety details to Note.</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <h5><i class="fas fa-id-card"></i> Client Details</h5>
+        </div>
+        <div class="panel-body">
+          <form id="createForm" onsubmit="createClient(event)" novalidate>
+            <div class="field-grid">
+              <div class="field">
+                <label for="clientId">National ID <span class="hint">(14 digits)</span></label>
+                <input type="text" id="clientId" placeholder="e.g. 29001011234567" inputmode="numeric" maxlength="14" required>
+                <div class="error-msg" data-error-for="clientId"></div>
+              </div>
+              <div class="field">
+                <label for="clientName">Full name <span class="hint">(letters only)</span></label>
+                <input type="text" id="clientName" placeholder="e.g. Ahmed Hassan" required>
+                <div class="error-msg" data-error-for="clientName"></div>
+              </div>
+
+              <div class="field">
+                <label for="clientEmail">Email address</label>
+                <input type="email" id="clientEmail" placeholder="name@example.com">
+                <div class="error-msg" data-error-for="clientEmail"></div>
+              </div>
+              <div class="field">
+                <label for="phoneNumbers">Phone numbers <span class="hint">(11 digits each, comma separated)</span></label>
+                <input type="text" id="phoneNumbers" placeholder="01012345678, 01098765432" required>
+                <div class="error-msg" data-error-for="phoneNumbers"></div>
+              </div>
+
+              <div class="field">
+                <label for="surety">Surety name <span class="hint">(letters only)</span></label>
+                <input type="text" id="surety" placeholder="Guarantor name" required>
+                <div class="error-msg" data-error-for="surety"></div>
+              </div>
+              <div class="field">
+                <label for="suretyNum">Surety phone number <span class="hint">(11 digits)</span></label>
+                <input type="text" id="suretyNum" placeholder="01012345678" inputmode="numeric" maxlength="11" required>
+                <div class="error-msg" data-error-for="suretyNum"></div>
+              </div>
+
+              <div class="field full">
+                <label for="address">Address</label>
+                <textarea id="address" placeholder="Street, city, and any delivery notes" required></textarea>
+                <div class="error-msg" data-error-for="address"></div>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:10px;margin-top:6px;">
+              <button type="submit" class="btn btn-primary" id="createBtn">
+                <i class="fas fa-save"></i>
+                <span id="createBtnText">Save client</span>
+                <i class="fas fa-spinner fa-spin" id="createSpinner" style="display:none;"></i>
+              </button>
+              <button type="reset" class="btn btn-ghost">Clear form</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- View Clients -->
+    <div id="view" class="tab-content">
+      <div class="topbar">
+        <div>
+          <div class="eyebrow">Client Records</div>
+          <h1>All clients</h1>
+          <p>Search, review, and manage every client on Note.</p>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat-card" style="--bar-color:var(--accent)">
+          <div class="stat-label">Total clients</div>
+          <div class="stat-value" id="statTotal">—</div>
+          <div class="stat-sub">Currently on record</div>
+        </div>
+        <div class="stat-card" style="--bar-color:var(--success)">
+          <div class="stat-label">With surety on file</div>
+          <div class="stat-value" id="statSurety">—</div>
+          <div class="stat-sub">Guarantor information complete</div>
+        </div>
+        <div class="stat-card" style="--bar-color:var(--warning)">
+          <div class="stat-label">Multiple phone numbers</div>
+          <div class="stat-value" id="statMultiPhone">—</div>
+          <div class="stat-sub">Clients with 2+ numbers</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <h5><i class="fas fa-table"></i> Clients</h5>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input type="text" id="searchInput" placeholder="Search by name or ID" oninput="renderFiltered()">
+            </div>
+            <button class="btn btn-ghost" onclick="downloadCsv()" title="Download as CSV">
+              <i class="fas fa-file-csv"></i> Export CSV
+            </button>
+            <button class="btn btn-icon" onclick="loadClients()" title="Refresh">
+              <i class="fas fa-rotate-right"></i>
+            </button>
+          </div>
+        </div>
+        <div class="panel-body" style="padding:0;">
+          <div id="clientsTableContainer"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Create Product -->
+    <div id="products-create" class="tab-content">
+      <div class="topbar">
+        <div>
+          <div class="eyebrow">Product Inventory</div>
+          <h1>Create a new product</h1>
+          <p>Add a product to the installment catalog with pricing information.</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <h5><i class="fas fa-box-open"></i> Product Details</h5>
+        </div>
+        <div class="panel-body">
+          <form id="createProductForm" onsubmit="createProduct(event)" novalidate>
+            <div class="field-grid">
+
+              <div class="field">
+                <label for="productName">Product name</label>
+                <input type="text" id="productName" placeholder="e.g. Smart TV" required>
+                <div class="error-msg" data-error-for="productName"></div>
+              </div>
+              <div class="field">
+                <label for="productPrice">Product price</label>
+                <input type="number" step="0.01" min="0" id="productPrice" placeholder="e.g. 15999.00" inputmode="decimal" required>
+                <div class="error-msg" data-error-for="productPrice"></div>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:10px;margin-top:6px;">
+              <button type="submit" class="btn btn-primary" id="createProductBtn">
+                <i class="fas fa-save"></i>
+                <span id="createProductBtnText">Save product</span>
+                <i class="fas fa-spinner fa-spin" id="createProductSpinner" style="display:none;"></i>
+              </button>
+              <button type="reset" class="btn btn-ghost">Clear form</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- View Products -->
+    <div id="products-view" class="tab-content">
+      <div class="topbar">
+        <div>
+          <div class="eyebrow">Product Inventory</div>
+          <h1>All products</h1>
+          <p>Browse, search, and manage products in the installment catalog.</p>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat-card" style="--bar-color:var(--accent)">
+          <div class="stat-label">Total products</div>
+          <div class="stat-value" id="productStatTotal">—</div>
+          <div class="stat-sub">Currently in inventory</div>
+        </div>
+        <div class="stat-card" style="--bar-color:var(--success)">
+          <div class="stat-label">Most expensive</div>
+          <div class="stat-value" id="productStatExpensive">—</div>
+          <div class="stat-sub">Higher priced item</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <h5><i class="fas fa-boxes"></i> Products</h5>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <div class="search-box">
+              <i class="fas fa-search"></i>
+              <input type="text" id="productSearchInput" placeholder="Search by name or ID" oninput="renderFilteredProducts()">
+            </div>
+            <button class="btn btn-ghost" onclick="downloadProductsCsv()" title="Download as CSV">
+              <i class="fas fa-file-csv"></i> Export CSV
+            </button>
+            <button class="btn btn-icon" onclick="loadProducts()" title="Refresh">
+              <i class="fas fa-rotate-right"></i>
+            </button>
+          </div>
+        </div>
+        <div class="panel-body" style="padding:0;">
+          <div id="productsTableContainer"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Balance -->
+    <div id="balance-view" class="tab-content">
+      <div class="topbar">
+        <div>
+          <div class="eyebrow">Account</div>
+          <h1>Balance</h1>
+          <p>View and update your current user balance from Nota.</p>
+        </div>
+      </div>
+
+      <div class="stats" style="grid-template-columns:repeat(2,1fr);">
+        <div class="stat-card" style="--bar-color:var(--accent)">
+          <div class="stat-label">Current balance</div>
+          <div class="stat-value" id="userBalanceValue">—</div>
+          <div class="stat-sub">Latest amount synced from account</div>
+        </div>
+        <div class="stat-card" style="--bar-color:var(--success)">
+          <div class="stat-label">Status</div>
+          <div class="stat-value" id="userBalanceStatus">—</div>
+          <div class="stat-sub">Sync status</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <h5><i class="fas fa-wallet"></i> Update balance</h5>
+        </div>
+        <div class="panel-body">
+          <form id="balanceForm" onsubmit="updateBalance(event)" novalidate>
+            <div class="field-grid">
+              <div class="field full">
+                <label for="balanceAmount">New balance</label>
+                <input id="balanceAmount" type="number" step="0.01" placeholder="Enter a new balance amount">
+                <div class="error-msg" data-error-for="balanceAmount"></div>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:10px;">
+              <button type="button" class="btn btn-ghost" onclick="loadBalance()">
+                <i class="fas fa-rotate-right"></i> Refresh
+              </button>
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Save balance
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- View Contracts -->
+    <div id="contracts-view" class="tab-content">
+      <div class="topbar">
+        <div>
+          <div class="eyebrow">Contracts</div>
+          <h1>All contracts</h1>
+          <p>Review and manage installment contracts.</p>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat-card" style="--bar-color:var(--accent)">
+          <div class="stat-label">Total contracts</div>
+          <div class="stat-value" id="contractsStatTotal">—</div>
+          <div class="stat-sub">Currently active</div>
+        </div>
+        <div class="stat-card" style="--bar-color:var(--warning)">
+          <div class="stat-label">Average installments</div>
+          <div class="stat-value" id="contractsStatAvgInstall">—</div>
+          <div class="stat-sub">Installments per contract</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <h5><i class="fas fa-file-contract"></i> Contracts</h5>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <button class="btn btn-ghost" onclick="downloadContractsCsv()" title="Download as CSV">
+              <i class="fas fa-file-csv"></i> Export CSV
+            </button>
+            <button class="btn btn-icon" onclick="loadContracts()" title="Refresh">
+              <i class="fas fa-rotate-right"></i>
+            </button>
+            
+          </div>
+        </div>
+        <div class="panel-body" style="padding:0;">
+          <div id="contractsTableContainer"></div>
+        </div>
+      </div>
+    </div>
+    
+        <!-- Dashboard -->
+    <div id="dashboard-view" class="tab-content">
+      <div class="topbar">
+        <div>
+          <div class="eyebrow">Overview</div>
+          <h1>Dashboard</h1>
+          <p>A snapshot of clients, contracts, and cash flow across Nota.</p>
+        </div>
+      </div>
+
+      <div class="stats" style="grid-template-columns:repeat(3,1fr);">
+        <div class="stat-card" style="--bar-color:var(--accent)">
+          <div class="stat-label">Total clients</div>
+          <div class="stat-value" id="dashTotalClients">—</div>
+        </div>
+        <div class="stat-card" style="--bar-color:var(--accent)">
+          <div class="stat-label">Total contracts</div>
+          <div class="stat-value" id="dashTotalContracts">—</div>
+        </div>
+        <div class="stat-card" style="--bar-color:var(--accent)">
+          <div class="stat-label">Total products</div>
+          <div class="stat-value" id="dashTotalProducts">—</div>
+        </div>
+
+        <div class="stat-card" style="--bar-color:var(--success)">
+          <div class="stat-label">Total sales</div>
+          <div class="stat-value" id="dashTotalSales">—</div>
+        </div>
+        <div class="stat-card" style="--bar-color:var(--success)">
+          <div class="stat-label">Collected amount</div>
+          <div class="stat-value" id="dashCollected">—</div>
+        </div>
+        <div class="stat-card" style="--bar-color:var(--warning)">
+          <div class="stat-label">Remaining amount</div>
+          <div class="stat-value" id="dashRemaining">—</div>
+        </div>
+
+        <div class="stat-card" style="--bar-color:var(--accent)">
+          <div class="stat-label">Today's installments</div>
+          <div class="stat-value" id="dashTodaysInstallments">—</div>
+          <div class="stat-sub">Due today</div>
+        </div>
+        <div class="stat-card" style="--bar-color:var(--danger)">
+          <div class="stat-label">Overdue installments</div>
+          <div class="stat-value" id="dashOverdue">—</div>
+          <div class="stat-sub">Past due, unpaid</div>
+        </div>
+        <div class="stat-card" style="--bar-color:var(--success)">
+          <div class="stat-label">Monthly profit</div>
+          <div class="stat-value" id="dashMonthlyProfit">—</div>
+          <div class="stat-sub" id="dashMonthLabelProfit"></div>
+        </div>
+        <div class="stat-card" style="--bar-color:var(--success)">
+          <div class="stat-label">Monthly expected amount</div>
+          <div class="stat-value" id="dashMonthlyExpected">—</div>
+          <div class="stat-sub" id="dashMonthLabelExpected"></div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-top:4px;">
+        <button class="btn btn-ghost" onclick="loadDashboard()">
+          <i class="fas fa-rotate-right"></i> Refresh
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-pen"></i> Edit client</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editForm" onsubmit="updateClient(event)" novalidate>
+          <input type="hidden" id="editClientId">
+          <div class="field-grid">
+            <div class="field">
+              <label for="editClientName">Full name <span class="hint">(letters only)</span></label>
+              <input type="text" id="editClientName" required>
+              <div class="error-msg" data-error-for="editClientName"></div>
+            </div>
+            <div class="field">
+              <label for="editClientEmail">Email address</label>
+              <input type="email" id="editClientEmail">
+              <div class="error-msg" data-error-for="editClientEmail"></div>
+            </div>
+            <div class="field">
+              <label for="editPhoneNumbers">Phone numbers <span class="hint">(11 digits each, comma separated)</span></label>
+              <input type="text" id="editPhoneNumbers" required>
+              <div class="error-msg" data-error-for="editPhoneNumbers"></div>
+            </div>
+            <div class="field">
+              <label for="editSurety">Surety name <span class="hint">(letters only)</span></label>
+              <input type="text" id="editSurety" required>
+              <div class="error-msg" data-error-for="editSurety"></div>
+            </div>
+            <div class="field">
+              <label for="editSuretyNum">Surety phone number <span class="hint">(11 digits)</span></label>
+              <input type="text" id="editSuretyNum" inputmode="numeric" maxlength="11" required>
+              <div class="error-msg" data-error-for="editSuretyNum"></div>
+            </div>
+            <div class="field">
+              <label for="editAddress">Address</label>
+              <input type="text" id="editAddress" required>
+              <div class="error-msg" data-error-for="editAddress"></div>
+            </div>
+          </div>
+          <div class="modal-footer" style="padding-left:0;padding-right:0;">
+            <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save"></i> Save changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Delete Modal -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-triangle-exclamation"></i> Remove client</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="warn-icon"><i class="fas fa-trash"></i></div>
+        <h4 style="margin:0 0 6px;font-weight:700;">Remove <span id="confirmClientName">this client</span>?</h4>
+        <p style="color:var(--text-muted);font-size:.88rem;">This deletes their record and surety details permanently. This can't be undone.</p>
+      </div>
+      <div class="modal-footer" style="justify-content:center;border-top:none;">
+        <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" style="background:var(--danger);box-shadow:none;" id="confirmDeleteBtn">
+          <i class="fas fa-trash"></i> Yes, remove
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Product Modal -->
+<div class="modal fade" id="productEditModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-pen"></i> Edit product</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editProductForm" onsubmit="updateProduct(event)" novalidate>
+          <input type="hidden" id="editProductId">
+          <div class="field-grid">
+            <div class="field">
+              <label for="editProductName">Product name</label>
+              <input type="text" id="editProductName" required>
+              <div class="error-msg" data-error-for="editProductName"></div>
+            </div>
+            <div class="field">
+              <label for="editProductPrice">Product price</label>
+              <input type="number" step="0.01" min="0" id="editProductPrice" inputmode="decimal" required>
+              <div class="error-msg" data-error-for="editProductPrice"></div>
+            </div>
+          </div>
+          <div class="modal-footer" style="padding-left:0;padding-right:0;">
+            <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save"></i> Save changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Contract Modal -->
+<div class="modal fade" id="contractModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-file-contract"></i> New contract</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="createContractForm" onsubmit="createContract(event)" novalidate>
+          <input type="hidden" id="contractClientId">
+          <div class="field-grid">
+            <div class="field full">
+              <label>Client</label>
+              <div style="display:flex;align-items:center;gap:12px;margin-top:6px;">
+                <div class="avatar" id="contractClientAvatar">CL</div>
+                <div>
+                  <div id="contractClientDisplay" style="font-weight:700;color:var(--ink);"></div>
+                  <div class="client-id mono" id="contractClientIdDisplay"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="contractProduct">Product</label>
+              <select id="contractProduct" required>
+                <option value="">Select product…</option>
+              </select>
+              <div class="error-msg" data-error-for="contractProduct"></div>
+            </div>
+
+            <div class="field">
+              <label for="contractSaleDate">Sale date</label>
+              <input type="date" id="contractSaleDate" required>
+              <div class="error-msg" data-error-for="contractSaleDate"></div>
+            </div>
+
+            <div class="field">
+              <label for="contractSalePrice">Sale price</label>
+              <input type="number" step="0.01" min="0" id="contractSalePrice" required>
+              <div class="error-msg" data-error-for="contractSalePrice"></div>
+            </div>
+
+            <div class="field">
+              <label for="contractReceivingPrice">Receiving price</label>
+              <input type="number" step="0.01" min="0" id="contractReceivingPrice" required>
+              <div class="error-msg" data-error-for="contractReceivingPrice"></div>
+            </div>
+
+            <div class="field">
+              <label for="contractInstallmentValue">Installment value</label>
+              <input type="number" step="0.01" min="0.01" id="contractInstallmentValue" required>
+              <div class="error-msg" data-error-for="contractInstallmentValue"></div>
+            </div>
+
+            <div class="field">
+              <label for="contractPayingDay">Paying day (1-28)</label>
+              <input type="number" min="1" max="28" id="contractPayingDay" required>
+              <div class="error-msg" data-error-for="contractPayingDay"></div>
+            </div>
+
+            <div class="field">
+              <label for="contractFirstInstallment">First installment date</label>
+              <input type="date" id="contractFirstInstallment" required>
+              <div class="error-msg" data-error-for="contractFirstInstallment"></div>
+            </div>
+          </div>
+
+          <div class="modal-footer" style="padding-left:0;padding-right:0;">
+            <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="createContractBtn">
+              <i class="fas fa-save"></i> <span id="createContractBtnText">Create contract</span>
+              <i class="fas fa-spinner fa-spin" id="createContractSpinner" style="display:none;margin-left:8px;"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Product Delete Modal -->
+<div class="modal fade" id="confirmProductModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-triangle-exclamation"></i> Remove product</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="warn-icon"><i class="fas fa-trash"></i></div>
+        <h4 style="margin:0 0 6px;font-weight:700;">Remove <span id="confirmProductName">this product</span>?</h4>
+        <p style="color:var(--text-muted);font-size:.88rem;">This deletes the product permanently. This can't be undone.</p>
+      </div>
+      <div class="modal-footer" style="justify-content:center;border-top:none;">
+        <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" style="background:var(--danger);box-shadow:none;" id="confirmProductDeleteBtn">
+          <i class="fas fa-trash"></i> Yes, remove
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Payments Modal -->
+<div class="modal fade" id="payingModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-money-bill-wave"></i> Payments</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+          <div class="avatar" id="payingClientAvatar">CL</div>
+          <div>
+            <div style="font-weight:700;color:var(--ink);" id="payingClientNameDisplay"></div>
+            <div class="client-id mono" id="payingContractIdDisplay"></div>
+          </div>
+        </div>
+
+        <div class="panel" style="box-shadow:none;margin-bottom:22px;">
+          <div class="panel-header" style="padding:12px 16px;">
+            <h5 style="font-size:.9rem;"><i class="fas fa-receipt"></i> Payment history</h5>
+            <button type="button" class="btn-icon" onclick="loadPayingsForCurrentContract()" title="Refresh">
+              <i class="fas fa-rotate-right"></i>
+            </button>
+          </div>
+          <div class="panel-body" style="padding:0;">
+            <div id="payingsListContainer"></div>
+          </div>
+        </div>
+
+        <form id="createPayingForm" onsubmit="createPaying(event)" novalidate>
+          <input type="hidden" id="payingContractId">
+          <input type="hidden" id="payingClientId">
+          <div class="field-grid">
+            <div class="field">
+              <label for="payingAmount">Amount paid</label>
+              <input type="number" step="0.01" min="0" id="payingAmount" required>
+              <div class="error-msg" data-error-for="payingAmount"></div>
+            </div>
+            <div class="field">
+              <label for="payingDate">Paying date</label>
+              <input type="date" id="payingDate" required>
+              <div class="error-msg" data-error-for="payingDate"></div>
+            </div>
+            <div class="field full">
+              <label for="payingNotice">Notice</label>
+              <textarea id="payingNotice" placeholder="Payment note or receipt details"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer" style="padding-left:0;padding-right:0;">
+            <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-plus"></i> Add payment
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Paying Modal -->
+<div class="modal fade" id="editPayingModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-pen"></i> Edit payment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editPayingForm" onsubmit="updatePaying(event)" novalidate>
+          <input type="hidden" id="editPayingId">
+          <div class="field-grid">
+            <div class="field">
+              <label for="editPayingAmount">Amount paid</label>
+              <input type="number" step="0.01" min="0" id="editPayingAmount" required>
+              <div class="error-msg" data-error-for="editPayingAmount"></div>
+            </div>
+            <div class="field">
+              <label for="editPayingDate">Paying date</label>
+              <input type="date" id="editPayingDate" required>
+              <div class="error-msg" data-error-for="editPayingDate"></div>
+            </div>
+            <div class="field full">
+              <label for="editPayingNotice">Notice</label>
+              <textarea id="editPayingNotice" placeholder="Payment note or receipt details"></textarea>
+            </div>
+          </div>
+          <div class="modal-footer" style="padding-left:0;padding-right:0;">
+            <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save"></i> Save changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Paying Delete Modal -->
+<div class="modal fade" id="confirmPayingModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-triangle-exclamation"></i> Remove payment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="warn-icon"><i class="fas fa-trash"></i></div>
+        <h4 style="margin:0 0 6px;font-weight:700;">Remove this payment?</h4>
+        <p style="color:var(--text-muted);font-size:.88rem;">This deletes the payment record permanently. This can't be undone.</p>
+      </div>
+      <div class="modal-footer" style="justify-content:center;border-top:none;">
+        <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" style="background:var(--danger);box-shadow:none;" id="confirmPayingDeleteBtn">
+          <i class="fas fa-trash"></i> Yes, remove
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Contract Delete Modal -->
+<div class="modal fade" id="confirmContractModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-triangle-exclamation"></i> Remove contract</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="warn-icon"><i class="fas fa-trash"></i></div>
+        <h4 style="margin:0 0 6px;font-weight:700;">Remove this contract?</h4>
+        <p style="color:var(--text-muted);font-size:.88rem;">This deletes the contract permanently. This can't be undone.</p>
+      </div>
+      <div class="modal-footer" style="justify-content:center;border-top:none;">
+        <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" style="background:var(--danger);box-shadow:none;" id="confirmContractDeleteBtn">
+          <i class="fas fa-trash"></i> Yes, remove
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Account Statement Modal -->
+<div class="modal fade" id="statementModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-file-invoice-dollar"></i> Account statement</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+          <div class="avatar" id="statementClientAvatar">CL</div>
+          <div>
+            <div style="font-weight:700;color:var(--ink);" id="statementClientName"></div>
+            <div class="client-id mono" id="statementClientId"></div>
+          </div>
+        </div>
+        <div class="stats" id="statementSummary" style="margin-bottom:20px;"></div>
+        <div id="statementContractsContainer"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="downloadStatementPdf()">
+          <i class="fas fa-file-pdf"></i> Download as PDF
+        </button>
+        <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Edit Contract Modal -->
+<div class="modal fade" id="editContractModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-pen"></i> Edit contract</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editContractForm" onsubmit="updateContract(event)" novalidate>
+          <input type="hidden" id="editContractId">
+          <div class="field-grid">
+            <div class="field">
+              <label for="editContractProduct">Product</label>
+              <select id="editContractProduct" required>
+                <option value="">Select product…</option>
+              </select>
+              <div class="error-msg" data-error-for="editContractProduct"></div>
+            </div>
+            <div class="field">
+              <label for="editContractSaleDate">Sale date</label>
+              <input type="date" id="editContractSaleDate" required>
+              <div class="error-msg" data-error-for="editContractSaleDate"></div>
+            </div>
+            <div class="field">
+              <label for="editContractSalePrice">Sale price</label>
+              <input type="number" step="0.01" min="0" id="editContractSalePrice" required>
+              <div class="error-msg" data-error-for="editContractSalePrice"></div>
+            </div>
+            <div class="field">
+              <label for="editContractReceivingPrice">Receiving price</label>
+              <input type="number" step="0.01" min="0" id="editContractReceivingPrice" required>
+              <div class="error-msg" data-error-for="editContractReceivingPrice"></div>
+            </div>
+            <div class="field">
+              <label for="editContractInstallmentValue">Installment value</label>
+              <input type="number" step="0.01" min="0.01" id="editContractInstallmentValue" required>
+              <div class="error-msg" data-error-for="editContractInstallmentValue"></div>
+            </div>
+            <div class="field">
+              <label for="editContractPayingDay">Paying day (1-28)</label>
+              <input type="number" min="1" max="28" id="editContractPayingDay" required>
+              <div class="error-msg" data-error-for="editContractPayingDay"></div>
+            </div>
+            <div class="field">
+              <label for="editContractFirstInstallment">First installment date</label>
+              <input type="date" id="editContractFirstInstallment" required>
+              <div class="error-msg" data-error-for="editContractFirstInstallment"></div>
+            </div>
+          </div>
+          <div class="modal-footer" style="padding-left:0;padding-right:0;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+            <button type="button" class="btn btn-ghost" onclick="openPayingModal()">
+              <i class="fas fa-money-bill-wave"></i> Payments
+            </button>
+            <div style="display:flex;gap:10px;">
+              <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Save changes
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const AUTH_API_URL = 'http://127.0.0.1:8000/api/auth';
+  const CLIENT_API_URL = 'http://127.0.0.1:8000/api/clients';
+  const PRODUCT_API_URL = 'http://127.0.0.1:8000/api/products';
+  const CONTRACT_API_URL = 'http://127.0.0.1:8000/api/contracts';
+  const PAYING_API_URL = 'http://127.0.0.1:8000/api/payings';
+  const DASHBOARD_API_URL = 'http://127.0.0.1:8000/api/dashboard';
+
+  function getAuthToken() {
+    return sessionStorage.getItem('access_token') || '';
+  }
+
+  const originalFetch = window.fetch.bind(window);
+  window.fetch = async function (url, options = {}) {
+    const headers = new Headers(options.headers || {});
+    const token = getAuthToken();
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    const response = await originalFetch(url, { ...options, headers });
+
+    if (response.status === 401 || response.status === 403) {
+      sessionStorage.removeItem('access_token');
+      sessionStorage.removeItem('user');
+      sessionStorage.removeItem('user_id');
+      window.location.href = 'login.html';
+      throw new Error('Session expired. Please sign in again.');
+    }
+
+    return response;
+  };
+
+  let editModal, confirmModal, productEditModal, confirmProductModal;
+  let contractModal;
+  let editContractModal, confirmContractModal;
+  let payingModal, editPayingModal, confirmPayingModal;
+  let allClients = [];
+  let allProducts = [];
+  let allContracts = [];
+  let currentPayingContractId = null;
+  let currentPayings = [];
+  let pendingDeleteId = null;
+  let pendingProductDeleteId = null;
+  let pendingContractDeleteId = null;
+  let pendingPayingDeleteId = null;
+  let currentStatementData = null;
+
+  document.addEventListener('DOMContentLoaded', function () {
+    if (!getAuthToken()) {
+      window.location.href = 'login.html';
+      return;
+    }
+
+    editModal = new bootstrap.Modal(document.getElementById('editModal'));
+    confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    productEditModal = new bootstrap.Modal(document.getElementById('productEditModal'));
+    confirmProductModal = new bootstrap.Modal(document.getElementById('confirmProductModal'));
+    contractModal = new bootstrap.Modal(document.getElementById('contractModal'));
+    editContractModal = new bootstrap.Modal(document.getElementById('editContractModal'));
+    confirmContractModal = new bootstrap.Modal(document.getElementById('confirmContractModal'));
+    payingModal = new bootstrap.Modal(document.getElementById('payingModal'));
+    editPayingModal = new bootstrap.Modal(document.getElementById('editPayingModal'));
+    confirmPayingModal = new bootstrap.Modal(document.getElementById('confirmPayingModal'));
+    document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDelete);
+    document.getElementById('confirmProductDeleteBtn').addEventListener('click', confirmProductDelete);
+    document.getElementById('confirmContractDeleteBtn').addEventListener('click', confirmContractDelete);
+    document.getElementById('confirmPayingDeleteBtn').addEventListener('click', confirmPayingDelete);
+    loadClients();
+  });
+
+  // ---------- Navigation ----------
+  function switchTab(tabName, btn) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabName).classList.add('active');
+    btn.classList.add('active');
+    if (tabName === 'view') loadClients();
+    if (tabName === 'dashboard-view') loadDashboard();
+    if (tabName === 'balance-view') loadBalance();
+    if (tabName === 'products-view') loadProducts();
+    if (tabName === 'contracts-view') loadContracts();
+    if (tabName === 'dashboard-view') loadDashboard();  
+  }
+
+  async function loadBalance() {
+    const balanceValueEl = document.getElementById('userBalanceValue');
+    const balanceStatusEl = document.getElementById('userBalanceStatus');
+    const amountInput = document.getElementById('balanceAmount');
+    if (!balanceValueEl || !balanceStatusEl || !amountInput) return;
+
+    balanceValueEl.textContent = '…';
+    balanceStatusEl.textContent = 'Loading…';
+
+    const userId = sessionStorage.getItem('user_id');
+    if (!userId) {
+      showToast('Unable to determine your user account.', 'danger');
+      balanceValueEl.textContent = '—';
+      balanceStatusEl.textContent = 'Unavailable';
+      return;
+    }
+
+    try {
+      const response = await fetch(`${AUTH_API_URL}/users/${encodeURIComponent(userId)}/balance`, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.detail || 'Failed to load balance.');
+      }
+      const data = await response.json();
+      const formatted = Number(data.balance).toFixed(2);
+      balanceValueEl.textContent = formatted;
+      balanceStatusEl.textContent = 'Synced';
+      amountInput.value = formatted;
+
+      const stored = JSON.parse(sessionStorage.getItem('user') || '{}');
+      stored.balance = Number(data.balance);
+      sessionStorage.setItem('user', JSON.stringify(stored));
+    } catch (error) {
+      showToast(error.message || 'Failed to load balance.', 'danger');
+      balanceValueEl.textContent = '—';
+      balanceStatusEl.textContent = 'Unavailable';
+    }
+  }
+
+  async function updateBalance(event) {
+    event.preventDefault();
+    const amountInput = document.getElementById('balanceAmount');
+    if (!amountInput) return;
+
+    const raw = amountInput.value.trim();
+    const balance = Number(raw);
+    setFieldError('balanceAmount', '');
+
+    if (raw === '' || Number.isNaN(balance) || balance < 0) {
+      setFieldError('balanceAmount', 'Enter a valid balance amount.');
+      showToast('Please enter a valid balance amount.', 'danger');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${AUTH_API_URL}/balance`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ balance })
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload.detail || 'Failed to update balance.');
+      }
+      const data = await response.json();
+      const formatted = Number(data.balance).toFixed(2);
+      document.getElementById('userBalanceValue').textContent = formatted;
+      document.getElementById('userBalanceStatus').textContent = 'Updated successfully';
+      amountInput.value = formatted;
+      const stored = JSON.parse(sessionStorage.getItem('user') || '{}');
+      stored.balance = Number(data.balance);
+      sessionStorage.setItem('user', JSON.stringify(stored));
+      showToast('Balance updated successfully.', 'success');
+    } catch (error) {
+      showToast(error.message || 'Failed to update balance.', 'danger');
+    }
+  }
+
+  // ---------- Toasts ----------
+  // Turns a FastAPI error body into a readable string.
+  // detail can be: a plain string, a single {msg,...} object, or a 422 validation
+  // array like [{loc:[...], msg:'...', type:'...'}, ...].
+  function parseApiError(errorBody, fallback) {
+    const detail = errorBody && errorBody.detail;
+    if (!detail) return fallback;
+    if (typeof detail === 'string') return detail;
+
+    const list = Array.isArray(detail) ? detail : [detail];
+    const messages = list.map(item => {
+      if (typeof item === 'string') return item;
+      if (item && typeof item === 'object') {
+        const field = Array.isArray(item.loc) ? item.loc[item.loc.length - 1] : null;
+        const msg = item.msg || JSON.stringify(item);
+        return field ? `${field}: ${msg}` : msg;
+      }
+      return String(item);
+    });
+    return messages.join(' — ') || fallback;
+  }
+
+  function showToast(message, type = 'success') {
+    const stack = document.getElementById('toastStack');
+    const icon = type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation';
+    const item = document.createElement('div');
+    item.className = `toast-item ${type}`;
+    item.innerHTML = `
+      <i class="fas ${icon}"></i>
+      <div class="msg">${message}</div>
+      <button class="close-toast"><i class="fas fa-xmark"></i></button>
+    `;
+    item.querySelector('.close-toast').onclick = () => item.remove();
+    stack.appendChild(item);
+    setTimeout(() => item.remove(), 4500);
+  }
+
+  // ---------- Validation helpers ----------
+  const NATIONAL_ID_PATTERN = /^\d{14}$/;
+  const NAME_PATTERN = /^[A-Za-z\u0600-\u06FF]+(?:[\s'-][A-Za-z\u0600-\u06FF]+)*$/;
+  const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const PHONE_PATTERN = /^\d{11}$/;
+
+  function setFieldError(id, message) {
+    const el = document.querySelector(`[data-error-for="${id}"]`);
+    const input = document.getElementById(id);
+    if (el) el.textContent = message || '';
+    if (input) input.classList.toggle('invalid', !!message);
+  }
+
+  function parsePhoneList(raw) {
+    return raw.split(',').map(p => p.trim()).filter(p => p.length > 0);
+  }
+
+  // Validates a comma-separated list of phone numbers (each must be exactly 11 digits, no duplicates).
+  // Returns the clean list on success, or null (and sets the field error) on failure.
+  function validatePhoneListField(raw, fieldId, label) {
+    if (!raw.trim()) { setFieldError(fieldId, `Enter at least one ${label}.`); return null; }
+    if (/,\s*,/.test(raw) || /^,|,$/.test(raw.trim())) {
+      setFieldError(fieldId, 'Remove empty entries between commas.');
+      return null;
+    }
+    const list = parsePhoneList(raw);
+    for (const p of list) {
+      if (!PHONE_PATTERN.test(p)) {
+        setFieldError(fieldId, `"${p}" must be exactly 11 digits (numbers only).`);
+        return null;
+      }
+    }
+    if (new Set(list).size !== list.length) {
+      setFieldError(fieldId, 'Remove duplicate phone numbers.');
+      return null;
+    }
+    setFieldError(fieldId, '');
+    return list;
+  }
+
+  // Validates a single phone number field (e.g. surety number). Returns true/false.
+  function validateSinglePhoneField(value, fieldId) {
+    if (!PHONE_PATTERN.test(value.trim())) {
+      setFieldError(fieldId, 'Must be exactly 11 digits (numbers only).');
+      return false;
+    }
+    setFieldError(fieldId, '');
+    return true;
+  }
+
+  function validateNameField(value, fieldId, label) {
+    if (!value.trim()) { setFieldError(fieldId, `${label} is required.`); return false; }
+    if (!NAME_PATTERN.test(value.trim())) {
+      setFieldError(fieldId, `${label} must contain letters only (no numbers or symbols).`);
+      return false;
+    }
+    setFieldError(fieldId, '');
+    return true;
+  }
+
+  function validateEmailField(value, fieldId) {
+    if (value == null) {
+      setFieldError(fieldId, '');
+      return true;
+    }
+    const trimmed = String(value).trim();
+    if (!trimmed) {
+      setFieldError(fieldId, '');
+      return true;
+    }
+    if (!EMAIL_PATTERN.test(trimmed)) {
+      setFieldError(fieldId, 'Enter a valid email address.');
+      return false;
+    }
+    setFieldError(fieldId, '');
+    return true;
+  }
+
+  function validateAddressField(value, fieldId) {
+    const trimmed = value.trim();
+    if (!trimmed) { setFieldError(fieldId, 'Address is required.'); return false; }
+    if (trimmed.length < 6) { setFieldError(fieldId, 'Enter a complete address (at least 6 characters).'); return false; }
+    setFieldError(fieldId, '');
+    return true;
+  }
+
+  function validateCreateForm(rawId, data, rawPhones) {
+    ['clientId', 'clientName', 'clientEmail', 'phoneNumbers', 'surety', 'suretyNum', 'address'].forEach(id => setFieldError(id, ''));
+    let ok = true;
+
+    if (!NATIONAL_ID_PATTERN.test(rawId.trim())) { setFieldError('clientId', 'Must be exactly 14 digits (national ID).'); ok = false; }
+    if (!validateNameField(data.client_name, 'clientName', 'Name')) ok = false;
+    if (!validateEmailField(data.client_email, 'clientEmail')) ok = false;
+    if (validatePhoneListField(rawPhones, 'phoneNumbers', 'phone number') === null) ok = false;
+    if (!validateNameField(data.surety, 'surety', 'Surety name')) ok = false;
+    if (!validateSinglePhoneField(data.surety_num, 'suretyNum')) ok = false;
+    if (!validateAddressField(data.address, 'address')) ok = false;
+
+    return ok;
+  }
+
+  function validateEditForm(data, rawPhones) {
+    ['editClientName', 'editClientEmail', 'editPhoneNumbers', 'editSurety', 'editSuretyNum', 'editAddress'].forEach(id => setFieldError(id, ''));
+    let ok = true;
+
+    if (!validateNameField(data.client_name, 'editClientName', 'Name')) ok = false;
+    if (!validateEmailField(data.client_email, 'editClientEmail')) ok = false;
+    if (validatePhoneListField(rawPhones, 'editPhoneNumbers', 'phone number') === null) ok = false;
+    if (!validateNameField(data.surety, 'editSurety', 'Surety name')) ok = false;
+    if (!validateSinglePhoneField(data.surety_num, 'editSuretyNum')) ok = false;
+    if (!validateAddressField(data.address, 'editAddress')) ok = false;
+
+    return ok;
+  }
+
+  // ---------- Create ----------
+  async function createClient(event) {
+    event.preventDefault();
+
+    const rawId = document.getElementById('clientId').value;
+    const rawPhones = document.getElementById('phoneNumbers').value;
+    const phoneNumbers = parsePhoneList(rawPhones);
+
+    // Force client_id to be sent as STRING, not number
+    const clientEmailValue = String(document.getElementById('clientEmail').value).trim();
+    const data = {
+      client_id: String(rawId).trim(),
+      client_name: String(document.getElementById('clientName').value).trim(),
+      client_email: clientEmailValue === '' ? null : clientEmailValue,
+      phone_numbers: phoneNumbers,
+      surety: String(document.getElementById('surety').value).trim(),
+      surety_num: String(document.getElementById('suretyNum').value).trim(),
+      address: String(document.getElementById('address').value).trim()
+    };
+
+    if (!validateCreateForm(rawId, data, rawPhones)) {
+      showToast('Please fix the highlighted fields.', 'danger');
+      return;
+    }
+
+    const btn = document.getElementById('createBtn');
+    const btnText = document.getElementById('createBtnText');
+    const spinner = document.getElementById('createSpinner');
+    btn.disabled = true;
+    spinner.style.display = 'inline-block';
+    btnText.textContent = 'Saving…';
+
+    try {
+      const response = await fetch(`${CLIENT_API_URL}/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        console.error('Create client failed. Server response:', error);
+        throw new Error(parseApiError(error, 'Failed to create client.'));
+      }
+
+      const result = await response.json();
+      document.getElementById('createForm').reset();
+      showToast('Client created successfully.', 'success');
+      setTimeout(() => document.querySelector('[data-tab="view"]').click(), 800);
+    } catch (error) {
+      showToast(error.message || 'Failed to create client', 'danger');
+    } finally {
+      btn.disabled = false;
+      spinner.style.display = 'none';
+      btnText.textContent = 'Save client';
+    }
+  }
+
+  // ---------- Load & render ----------
+  function renderSkeleton() {
+    let rows = '';
+    for (let i = 0; i < 4; i++) {
+      rows += `<tr class="skeleton-row"><td colspan="6"><div class="skeleton-bar"></div></td></tr>`;
+    }
+    document.getElementById('clientsTableContainer').innerHTML = `<table><tbody>${rows}</tbody></table>`;
+  }
+
+  async function loadClients() {
+    renderSkeleton();
+    try {
+      const response = await fetch(`${CLIENT_API_URL}/`);
+      if (!response.ok) throw new Error('Failed to load clients.');
+      allClients = await response.json();
+      updateStats(allClients);
+      renderFiltered();
+    } catch (error) {
+      showToast(error.message, 'danger');
+      document.getElementById('clientsTableContainer').innerHTML = '';
+    }
+  }
+
+  function updateStats(clients) {
+    document.getElementById('statTotal').textContent = clients.length;
+    document.getElementById('statSurety').textContent = clients.filter(c => c.surety && c.surety_num).length;
+    document.getElementById('statMultiPhone').textContent = clients.filter(c => (c.phone_numbers || []).length > 1).length;
+  }
+
+let clientSearchDebounce = null;
+let clientSearchRequestToken = 0;
+
+function renderFiltered() {
+  const q = (document.getElementById('searchInput')?.value || '').trim();
+
+  clearTimeout(clientSearchDebounce);
+
+  if (!q) {
+    clientSearchRequestToken++;
+    displayClients(allClients);
+    return;
+  }
+
+  // National ID is all digits — filter locally against the loaded list, instant.
+  if (/^\d+$/.test(q)) {
+    clientSearchRequestToken++;
+    const localMatches = allClients.filter(c => String(c.client_id).includes(q));
+    displayClients(localMatches);
+    return;
+  }
+
+  clientSearchDebounce = setTimeout(() => searchClientByName(q), 350);
+}
+
+async function searchClientByName(name) {
+  const container = document.getElementById('clientsTableContainer');
+  container.innerHTML = `
+    <table><tbody>
+      <tr class="skeleton-row"><td colspan="6"><div class="skeleton-bar"></div></td></tr>
+    </tbody></table>
+  `;
+
+  const thisToken = ++clientSearchRequestToken;
+
+  try {
+    const response = await fetch(`${CLIENT_API_URL}/name/${encodeURIComponent(name)}`);
+    if (!response.ok) throw new Error('Failed to search clients.');
+
+    const clients = await response.json();
+    if (thisToken !== clientSearchRequestToken) return;
+
+    displayClients(clients);
+  } catch (error) {
+    if (thisToken !== clientSearchRequestToken) return;
+    showToast(error.message || 'Failed to search clients', 'danger');
+    displayClients([]);
+  }
+}
+
+  function initials(name) {
+    return name.split(' ').filter(Boolean).slice(0, 2).map(n => n[0].toUpperCase()).join('');
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function displayClients(clients) {
+    const container = document.getElementById('clientsTableContainer');
+
+    if (clients.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="icon-wrap"><i class="fas fa-user-group"></i></div>
+          <h4>No clients found</h4>
+          <p>Try a different search, or add your first client to the ledger.</p>
+          <button class="btn btn-primary" onclick="document.querySelector('[data-tab=create]').click()">
+            <i class="fas fa-user-plus"></i> New client
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    let html = `
+      <table>
+        <thead>
+          <tr>
+            <th>Client</th>
+            <th>Contact</th>
+            <th>Phones</th>
+            <th>Surety</th>
+            <th>Address</th>
+            <th style="text-align:right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    clients.forEach(client => {
+      const phones = (client.phone_numbers || []).map(p => `<span class="phone-tag">${escapeHtml(p.number)}</span>`).join('');
+      html += `
+        <tr>
+          <td>
+            <div class="client-cell">
+              <div class="avatar">${initials(client.client_name)}</div>
+              <div>
+                <div class="client-name">${escapeHtml(client.client_name)}</div>
+                <div class="client-id mono">ID ${client.client_id}</div>
+              </div>
+            </div>
+          </td>
+          <td>${escapeHtml(client.client_email || '')}</td>
+          <td>${phones}</td>
+          <td>
+            <div style="font-weight:600;">${escapeHtml(client.surety)}</div>
+            <div class="client-id mono">${escapeHtml(client.surety_num || '')}</div>
+          </td>
+          <td class="addr-cell">${escapeHtml(client.address)}</td>
+          <td>
+            <div class="row-actions" style="justify-content:flex-end;">
+              <button class="btn-icon" onclick="openAccountStatementModal('${client.client_id}')" title="Account Statement">
+                <i class="fas fa-clipboard-list"></i>
+              </button>
+              <button class="btn-icon" onclick="openEditModal('${client.client_id}')" title="Edit">
+                <i class="fas fa-pen"></i>
+              </button>
+              <button class="btn-icon" onclick="openContractModal('${client.client_id}')" title="New contract">
+                <i class="fas fa-file-contract"></i>
+              </button>
+              <button class="btn-icon danger" onclick="openDeleteConfirm('${client.client_id}', '${escapeHtml(client.client_name)}')" title="Delete">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    });
+
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+  }
+
+  // ---------- Export ----------
+  function csvEscape(value) {
+    const str = String(value ?? '');
+    if (/[",\n]/.test(str)) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+  }
+
+  function downloadCsv() {
+    const q = (document.getElementById('searchInput')?.value || '').toLowerCase().trim();
+    const rows = !q ? allClients : allClients.filter(c =>
+      String(c.client_id).includes(q) ||
+      c.client_name.toLowerCase().includes(q) ||
+      String(c.client_email || '').toLowerCase().includes(q)
+    );
+
+    if (rows.length === 0) {
+      showToast('There are no clients to export.', 'danger');
+      return;
+    }
+
+    const headers = ['Client ID', 'Name', 'Email', 'Phone Numbers', 'Surety', 'Surety Number', 'Address'];
+    const lines = [headers.join(',')];
+
+    rows.forEach(c => {
+      const phones = (c.phone_numbers || []).map(p => p.number).join('; ');
+      lines.push([
+        csvEscape(c.client_id),
+        csvEscape(c.client_name),
+        csvEscape(c.client_email),
+        csvEscape(phones),
+        csvEscape(c.surety),
+        csvEscape(c.surety_num),
+        csvEscape(c.address)
+      ].join(','));
+    });
+
+    const csvContent = '\uFEFF' + lines.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0, 10);
+    link.href = url;
+    link.download = `clients-${stamp}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    showToast(`Exported ${rows.length} client${rows.length === 1 ? '' : 's'} to CSV.`, 'success');
+  }
+
+  // ---------- Edit ----------
+  async function openEditModal(clientId) {
+    try {
+      const response = await fetch(`${CLIENT_API_URL}/${clientId}`);
+      if (!response.ok) throw new Error('Failed to load client.');
+      const client = await response.json();
+
+      document.getElementById('editClientId').value = client.client_id;
+      document.getElementById('editClientName').value = client.client_name;
+      document.getElementById('editClientEmail').value = client.client_email || '';
+      document.getElementById('editPhoneNumbers').value = (client.phone_numbers || []).map(p => p.number).join(', ');
+      document.getElementById('editSurety').value = client.surety;
+      document.getElementById('editSuretyNum').value = client.surety_num;
+      document.getElementById('editAddress').value = client.address;
+      ['editClientName', 'editClientEmail', 'editPhoneNumbers', 'editSurety', 'editSuretyNum', 'editAddress'].forEach(id => setFieldError(id, ''));
+
+      editModal.show();
+    } catch (error) {
+      showToast(error.message, 'danger');
+    }
+  }
+
+  // ---------- Contract helpers ----------
+  function openContractModal(clientId) {
+    const client = allClients.find(c => String(c.client_id) === String(clientId));
+    if (!client) {
+      showToast('Client not found. Refresh the client list and try again.', 'danger');
+      return;
+    }
+
+    document.getElementById('contractClientId').value = client.client_id;
+    document.getElementById('contractClientDisplay').textContent = client.client_name;
+    document.getElementById('contractClientIdDisplay').textContent = `ID ${client.client_id}`;
+    document.getElementById('contractClientAvatar').textContent = initials(client.client_name);
+
+    // populate product select
+    const select = document.getElementById('contractProduct');
+    select.innerHTML = '<option value="">Select product…</option>';
+    if (!allProducts.length) {
+      // load products on demand
+      loadProducts().then(() => {
+        allProducts.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p.product_id;
+          opt.textContent = `${p.product_name} — ${Number(p.product_price).toFixed(2)}`;
+          select.appendChild(opt);
+        });
+        contractModal.show();
+      }).catch(() => contractModal.show());
+      return;
+    }
+
+    allProducts.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.product_id;
+      opt.textContent = `${p.product_name} — ${Number(p.product_price).toFixed(2)}`;
+      select.appendChild(opt);
+    });
+
+    contractModal.show();
+  }
+
+  function validateContractForm() {
+    ['contractProduct','contractSaleDate','contractSalePrice','contractReceivingPrice','contractInstallmentValue','contractPayingDay','contractFirstInstallment'].forEach(id => setFieldError(id, ''));
+    let ok = true;
+    const product = document.getElementById('contractProduct').value;
+    const salePrice = Number(document.getElementById('contractSalePrice').value);
+    const receiving = Number(document.getElementById('contractReceivingPrice').value);
+    const installmentValue = Number(document.getElementById('contractInstallmentValue').value);
+    const payingDay = Number(document.getElementById('contractPayingDay').value);
+
+    if (!product) { setFieldError('contractProduct','Please select a product.'); ok = false; }
+    if (!document.getElementById('contractSaleDate').value) { setFieldError('contractSaleDate','Sale date is required.'); ok = false; }
+    if (Number.isNaN(salePrice) || salePrice <= 0) { setFieldError('contractSalePrice','Enter a valid sale price.'); ok = false; }
+    if (Number.isNaN(receiving) || receiving < 0) { setFieldError('contractReceivingPrice','Enter a valid receiving price.'); ok = false; }
+    if (Number.isNaN(installmentValue) || installmentValue <= 0) { setFieldError('contractInstallmentValue','Installment value must be greater than 0.'); ok = false; }
+    if (!Number.isInteger(payingDay) || payingDay < 1 || payingDay > 28) { setFieldError('contractPayingDay','Paying day must be 1–28.'); ok = false; }
+    if (!document.getElementById('contractFirstInstallment').value) { setFieldError('contractFirstInstallment','First installment date is required.'); ok = false; }
+
+    return ok;
+  }
+
+  async function createContract(event) {
+    event.preventDefault();
+    if (!validateContractForm()) { showToast('Please fix the highlighted contract fields.', 'danger'); return; }
+
+    const data = {
+      product_id: Number(document.getElementById('contractProduct').value),
+      client_id: String(document.getElementById('contractClientId').value),
+      sale_date: document.getElementById('contractSaleDate').value,
+      sale_price: Number(document.getElementById('contractSalePrice').value),
+      receiving_price: Number(document.getElementById('contractReceivingPrice').value),
+      installment_value: Number(document.getElementById('contractInstallmentValue').value),
+      paying_day: Number(document.getElementById('contractPayingDay').value),
+      first_installment: document.getElementById('contractFirstInstallment').value
+    };
+    
+    const btn = document.getElementById('createContractBtn');
+    const btnText = document.getElementById('createContractBtnText');
+    const spinner = document.getElementById('createContractSpinner');
+    btn.disabled = true; spinner.style.display = 'inline-block'; btnText.textContent = 'Creating…';
+
+    try {
+      const response = await fetch(`${CONTRACT_API_URL}/`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data)
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(parseApiError(err, 'Failed to create contract.'));
+      }
+      const created = await response.json();
+      showToast('Contract created successfully.', 'success');
+      contractModal.hide();
+      setTimeout(() => document.querySelector('[data-tab="contracts-view"]').click(), 800);
+    } catch (error) {
+      showToast(error.message || 'Failed to create contract', 'danger');
+    } finally {
+      btn.disabled = false; spinner.style.display = 'none'; btnText.textContent = 'Create contract';
+    }
+  }
+
+  async function updateClient(event) {
+    event.preventDefault();
+    const clientId = document.getElementById('editClientId').value.trim();
+    const rawPhones = document.getElementById('editPhoneNumbers').value;
+    const phoneNumbers = parsePhoneList(rawPhones);
+
+    const data = {
+      client_name: document.getElementById('editClientName').value,
+      client_email: (() => {
+        const val = String(document.getElementById('editClientEmail').value).trim();
+        return val === '' ? null : val;
+      })(),
+      phone_numbers: phoneNumbers,
+      surety: document.getElementById('editSurety').value,
+      surety_num: document.getElementById('editSuretyNum').value,
+      address: document.getElementById('editAddress').value
+    };
+
+    if (!validateEditForm(data, rawPhones)) {
+      showToast('Please fix the highlighted fields.', 'danger');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${CLIENT_API_URL}/${clientId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        console.error('Update client failed. Server response:', error);
+        throw new Error(parseApiError(error, 'Failed to update client.'));
+      }
+
+      editModal.hide();
+      showToast('Client updated successfully.', 'success');
+      loadClients();
+    } catch (error) {
+      showToast(error.message, 'danger');
+    }
+  }
+
+  // ---------- Delete ----------
+  function openDeleteConfirm(clientId, name) {
+    pendingDeleteId = clientId;
+    document.getElementById('confirmClientName').textContent = name || 'this client';
+    confirmModal.show();
+  }
+
+  async function confirmDelete() {
+    if (pendingDeleteId == null) return;
+    try {
+      const response = await fetch(`${CLIENT_API_URL}/${pendingDeleteId}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Failed to delete client.');
+      showToast('Client removed from the ledger.', 'success');
+      confirmModal.hide();
+      loadClients();
+    } catch (error) {
+      showToast(error.message, 'danger');
+    } finally {
+      pendingDeleteId = null;
+    }
+  }
+
+  // ---------- Product Helpers ----------
+  // NOTE: there is no product ID input in the form — the backend is expected
+  // to auto-generate product_id on create, so it is not part of this payload.
+  function validateProductCreateForm(data) {
+    ['productName', 'productPrice'].forEach(id => setFieldError(id, ''));
+    let ok = true;
+
+    if (!data.product_name.trim()) {
+      setFieldError('productName', 'Product name is required.');
+      ok = false;
+    }
+
+    if (Number.isNaN(data.product_price) || data.product_price <= 0) {
+      setFieldError('productPrice', 'Enter a valid price greater than 0.');
+      ok = false;
+    }
+
+    return ok;
+  }
+
+  function validateProductEditForm(data) {
+    ['editProductName', 'editProductPrice'].forEach(id => setFieldError(id, ''));
+    let ok = true;
+
+    if (!data.product_name.trim()) {
+      setFieldError('editProductName', 'Product name is required.');
+      ok = false;
+    }
+
+    if (Number.isNaN(data.product_price) || data.product_price <= 0) {
+      setFieldError('editProductPrice', 'Enter a valid price greater than 0.');
+      ok = false;
+    }
+
+    return ok;
+  }
+
+  async function createProduct(event) {
+    event.preventDefault();
+
+    const data = {
+      product_name: String(document.getElementById('productName').value).trim(),
+      product_price: Number(document.getElementById('productPrice').value)
+    };
+
+    if (!validateProductCreateForm(data)) {
+      showToast('Please fix the highlighted fields.', 'danger');
+      return;
+    }
+
+    const btn = document.getElementById('createProductBtn');
+    const btnText = document.getElementById('createProductBtnText');
+    const spinner = document.getElementById('createProductSpinner');
+    btn.disabled = true;
+    spinner.style.display = 'inline-block';
+    btnText.textContent = 'Saving…';
+
+    try {
+      const response = await fetch(`${PRODUCT_API_URL}/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(parseApiError(error, 'Failed to create product.'));
+      }
+
+      document.getElementById('createProductForm').reset();
+      showToast('Product created successfully.', 'success');
+      setTimeout(() => document.querySelector('[data-tab="products-view"]').click(), 800);
+    } catch (error) {
+      showToast(error.message || 'Failed to create product', 'danger');
+    } finally {
+      btn.disabled = false;
+      spinner.style.display = 'none';
+      btnText.textContent = 'Save product';
+    }
+  }
+
+  function renderProductSkeleton() {
+    let rows = '';
+    for (let i = 0; i < 4; i++) {
+      rows += `<tr class="skeleton-row"><td colspan="4"><div class="skeleton-bar"></div></td></tr>`;
+    }
+    document.getElementById('productsTableContainer').innerHTML = `<table><tbody>${rows}</tbody></table>`;
+  }
+
+  async function loadProducts() {
+    renderProductSkeleton();
+    try {
+      const response = await fetch(`${PRODUCT_API_URL}/`);
+      if (!response.ok) throw new Error('Failed to load products.');
+      allProducts = await response.json();
+      updateProductStats(allProducts);
+      renderFilteredProducts();
+    } catch (error) {
+      showToast(error.message, 'danger');
+      document.getElementById('productsTableContainer').innerHTML = '';
+    }
+  }
+
+  function updateProductStats(products) {
+    document.getElementById('productStatTotal').textContent = products.length;
+    const expensive = products.reduce((max, item) => Math.max(max, Number(item.product_price) || 0), 0);
+    document.getElementById('productStatExpensive').textContent = expensive ? expensive.toLocaleString() : '—';
+  }
+
+  // Debounce timer + request token for product name search.
+  // The token guards against race conditions: if the user types fast, an
+  // earlier (slower) request could resolve AFTER a later one and overwrite
+  // its results with stale data. We only apply a response if its token still
+  // matches the latest request issued.
+  let productSearchDebounce = null;
+  let productSearchRequestToken = 0;
+
+  function renderFilteredProducts() {
+    const q = (document.getElementById('productSearchInput')?.value || '').trim();
+
+    clearTimeout(productSearchDebounce);
+
+    if (!q) {
+      // Empty box: bump the token so any in-flight search response is discarded,
+      // then show the full in-memory list immediately (no backend call needed).
+      productSearchRequestToken++;
+      displayProducts(allProducts);
+      return;
+    }
+
+    // If it looks like a pure ID (all digits), filter locally — instant, no network call.
+    // Also bump the token so a pending name-search response can't clobber this result.
+    if (/^\d+$/.test(q)) {
+      productSearchRequestToken++;
+      const localMatches = allProducts.filter(p => String(p.product_id).includes(q));
+      displayProducts(localMatches);
+      return;
+    }
+
+    productSearchDebounce = setTimeout(() => searchProductByName(q), 350);
+  }
+
+  async function searchProductByName(name) {
+    const container = document.getElementById('productsTableContainer');
+    container.innerHTML = `
+      <table><tbody>
+        <tr class="skeleton-row"><td colspan="4"><div class="skeleton-bar"></div></td></tr>
+      </tbody></table>
+    `;
+
+    const thisToken = ++productSearchRequestToken;
+
+    try {
+      // Backend now does a partial (ILIKE) match on product_name and returns a
+      // List[ProductResponse] rather than a single exact-match object.
+      const response = await fetch(`${PRODUCT_API_URL}/name/${encodeURIComponent(name)}`);
+      if (!response.ok) throw new Error('Failed to search products.');
+
+      const products = await response.json();
+
+      // Discard this result if a newer search has been issued since.
+      if (thisToken !== productSearchRequestToken) return;
+
+      displayProducts(products);
+    } catch (error) {
+      if (thisToken !== productSearchRequestToken) return;
+      showToast(error.message || 'Failed to search products', 'danger');
+      displayProducts([]);
+    }
+  }
+
+  function displayProducts(products) {
+    const container = document.getElementById('productsTableContainer');
+
+    if (products.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="icon-wrap"><i class="fas fa-box-open"></i></div>
+          <h4>No products found</h4>
+          <p>Add a product or change your search terms to see product results.</p>
+          <button class="btn btn-primary" onclick="document.querySelector('[data-tab=\"products-create\"]').click()">
+            <i class="fas fa-box-open"></i> New product
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    let html = `
+      <table>
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Price</th>
+            <th style="text-align:right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    products.forEach(product => {
+      html += `
+        <tr>
+          <td>
+            <div class="client-cell">
+              <div class="avatar">${escapeHtml(String(product.product_name).slice(0, 2).toUpperCase())}</div>
+              <div>
+                <div class="client-name">${escapeHtml(product.product_name)}</div>
+                <div class="client-id mono">ID ${escapeHtml(String(product.product_id))}</div>
+              </div>
+            </div>
+          </td>
+          <td>${escapeHtml(Number(product.product_price).toFixed(2))}</td>
+          <td>
+            <div class="row-actions" style="justify-content:flex-end;">
+              <button class="btn-icon" onclick="openProductEditModal('${product.product_id}')" title="Edit">
+                <i class="fas fa-pen"></i>
+              </button>
+              <button class="btn-icon danger" onclick="openProductDeleteConfirm('${product.product_id}', '${escapeHtml(product.product_name)}')" title="Delete">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    });
+
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+  }
+
+  function downloadProductsCsv() {
+    const q = (document.getElementById('productSearchInput')?.value || '').toLowerCase().trim();
+    const rows = !q ? allProducts : allProducts.filter(p =>
+      String(p.product_id).includes(q) ||
+      p.product_name.toLowerCase().includes(q)
+    );
+
+    if (rows.length === 0) {
+      showToast('There are no products to export.', 'danger');
+      return;
+    }
+
+    const headers = ['Product ID', 'Name', 'Price'];
+    const lines = [headers.join(',')];
+
+    rows.forEach(p => {
+      lines.push([p.product_id, p.product_name, Number(p.product_price).toFixed(2)].map(csvEscape).join(','));
+    });
+
+    const csvContent = '\uFEFF' + lines.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0, 10);
+    link.href = url;
+    link.download = `products-${stamp}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    showToast(`Exported ${rows.length} product${rows.length === 1 ? '' : 's'} to CSV.`, 'success');
+  }
+
+  async function openProductEditModal(productId) {
+    try {
+      const response = await fetch(`${PRODUCT_API_URL}/${productId}`);
+      if (!response.ok) throw new Error('Failed to load product.');
+      const product = await response.json();
+
+      document.getElementById('editProductId').value = product.product_id;
+      document.getElementById('editProductName').value = product.product_name;
+      document.getElementById('editProductPrice').value = product.product_price;
+      ['editProductName', 'editProductPrice'].forEach(id => setFieldError(id, ''));
+
+      productEditModal.show();
+    } catch (error) {
+      showToast(error.message, 'danger');
+    }
+  }
+
+  async function updateProduct(event) {
+    event.preventDefault();
+    const productId = document.getElementById('editProductId').value.trim();
+    const data = {
+      product_name: String(document.getElementById('editProductName').value).trim(),
+      product_price: Number(document.getElementById('editProductPrice').value)
+    };
+
+    if (!validateProductEditForm(data)) {
+      showToast('Please fix the highlighted fields.', 'danger');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${PRODUCT_API_URL}/${productId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(parseApiError(error, 'Failed to update product.'));
+      }
+
+      productEditModal.hide();
+      showToast('Product updated successfully.', 'success');
+      loadProducts();
+    } catch (error) {
+      showToast(error.message, 'danger');
+    }
+  }
+
+  function openProductDeleteConfirm(productId, name) {
+    pendingProductDeleteId = productId;
+    document.getElementById('confirmProductName').textContent = name || 'this product';
+    confirmProductModal.show();
+  }
+
+  async function confirmProductDelete() {
+    if (pendingProductDeleteId == null) return;
+    try {
+      const response = await fetch(`${PRODUCT_API_URL}/${pendingProductDeleteId}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('This product is included in a contract..');
+      showToast('Product removed from inventory.', 'success');
+      confirmProductModal.hide();
+      loadProducts();
+    } catch (error) {
+      showToast(error.message, 'danger');
+    } finally {
+      pendingProductDeleteId = null;
+    }
+  }
+
+  // ---------- Contracts: load, render, edit, delete ----------
+  async function loadContracts() {
+    try {
+      if (!allProducts.length) await loadProducts();
+      if (!allClients.length) await loadClients();
+
+      const response = await fetch(`${CONTRACT_API_URL}/`);
+      if (!response.ok) throw new Error('Failed to load contracts.');
+      allContracts = await response.json();
+
+      // Fetch status for each contract in parallel and attach it
+      const statuses = await Promise.all(
+        allContracts.map(c => fetchContractStatus(c.contract_id))
+      );
+      allContracts.forEach((c, i) => { c.status = statuses[i]; });
+
+      updateContractStats(allContracts);
+      displayContracts(allContracts);
+    } catch (error) {
+      showToast(error.message, 'danger');
+      document.getElementById('contractsTableContainer').innerHTML = '';
+    }
+  }
+  function updateContractStats(contracts) {
+    document.getElementById('contractsStatTotal').textContent = contracts.length;
+    
+    const avg = contracts.length ? Math.round(contracts.reduce((s, c) => s + (Number(c.installment_num)||0), 0) / contracts.length) : '—';
+    document.getElementById('contractsStatAvgInstall').textContent = avg;
+  }
+  async function fetchContractStatus(contractId) {
+    try {
+      const response = await fetch(`${CONTRACT_API_URL}/${contractId}/status`);
+      if (!response.ok) return 'Unknown';
+      const data = await response.json();
+      return data.status || 'Unknown';
+    } catch {
+      return 'Unknown';
+    }
+  }
+  function displayContracts(contracts) {
+    const container = document.getElementById('contractsTableContainer');
+  
+    if (!contracts || contracts.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="icon-wrap"><i class="fas fa-file-contract"></i></div>
+          <h4>No contracts found</h4>
+          <p>Create a contract from a client row to get started.</p>
+        </div>
+      `;
+      return;
+    }
+
+    let html = `
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Client</th>
+            <th>Product</th>
+            <th>Sale</th>
+            <th>Remaining</th>
+            <th>Installment</th>
+            <th>Status</th>
+            <th style="text-align:right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    contracts.forEach(ct => {
+      const client = allClients.find(c => String(c.client_id) === String(ct.client_id));
+      const product = allProducts.find(p => String(p.product_id) === String(ct.product_id));
+      const clientName = client ? escapeHtml(client.client_name) : `ID ${escapeHtml(String(ct.client_id))}`;
+      const productName = product ? escapeHtml(product.product_name) : `ID ${escapeHtml(String(ct.product_id))}`;
+      const statusBadge =
+        ct.status === "Completed"
+          ? '<span class="badge-completed"><i class="fas fa-circle-check"></i> Completed</span>'
+          : ct.status === "Late"
+              ? '<span class="badge-status late"><i class="fas fa-circle"></i> Late</span>'
+              : ct.status === "On Time"
+                  ? '<span class="badge-status ontime"><i class="fas fa-circle"></i> On Time</span>'
+                  : '<i class="fas fa-circle" style="color:var(--text-muted);" title="Unknown"></i>';
+      html += `
+        <tr>
+          <td class="mono">${escapeHtml(String(ct.contract_id))}</td>
+          <td>${clientName}</td>
+          <td>${productName}</td>
+          <td>${escapeHtml(Number(ct.sale_price).toFixed(2))}</td>
+          <td>${escapeHtml(Number(ct.remaining_price).toFixed(2))}</td>
+          <td>${escapeHtml(String(ct.installment_value))} × ${escapeHtml(String(ct.installment_num))}</td>
+          <td>${statusBadge}</td>
+          <td>
+            <div class="row-actions" style="justify-content:flex-end;">
+              
+              <button class="btn-icon" onclick="openContractEditModal('${ct.contract_id}')" title="Edit">
+                <i class="fas fa-pen"></i>
+              </button>
+              <button class="btn-icon" onclick="openPayingModal('${ct.contract_id}')" title="Payments">
+                <i class="fas fa-money-bill-wave"></i>
+              </button>
+              <button class="btn-icon danger" onclick="openContractDeleteConfirm('${ct.contract_id}')" title="Delete">
+                <i class="fas fa-trash"></i>
+              </button>
+              
+            </div>
+          </td>
+        </tr>
+      `;
+    });
+
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+  }
+
+  function downloadContractsCsv() {
+    if (!allContracts || allContracts.length === 0) { showToast('There are no contracts to export.', 'danger'); return; }
+    const headers = ['Contract ID','Client ID','Product ID','Sale Price','Receiving Price','Remaining Price','Installment Value','Installment Num','Paying Day','First Installment'];
+    const lines = [headers.join(',')];
+    allContracts.forEach(c => {
+      lines.push([
+        c.contract_id, c.client_id, c.product_id, Number(c.sale_price).toFixed(2), Number(c.receiving_price).toFixed(2), Number(c.remaining_price).toFixed(2), Number(c.installment_value).toFixed(2), c.installment_num, c.paying_day, c.first_installment
+      ].map(csvEscape).join(','));
+    });
+    const csvContent = '\uFEFF' + lines.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url; link.download = `contracts-${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url);
+    showToast(`Exported ${allContracts.length} contract${allContracts.length===1?'':'s'} to CSV.`, 'success');
+  }
+
+  async function openContractEditModal(contractId) {
+    try {
+      const response = await fetch(`${CONTRACT_API_URL}/${contractId}`);
+      if (!response.ok) throw new Error('Failed to load contract.');
+      const c = await response.json();
+
+      // Ensure products are loaded before populating the select — allProducts
+      // stays empty until the Products tab (or the create-contract modal) has
+      // been opened at least once in this session.
+      if (!allProducts.length) {
+        await loadProducts();
+      }
+
+      // populate product select
+      const sel = document.getElementById('editContractProduct');
+      sel.innerHTML = '<option value="">Select product…</option>';
+      allProducts.forEach(p => { const opt = document.createElement('option'); opt.value = p.product_id; opt.textContent = `${p.product_name} — ${Number(p.product_price).toFixed(2)}`; sel.appendChild(opt); });
+
+      document.getElementById('editContractId').value = c.contract_id;
+      document.getElementById('editContractProduct').value = c.product_id;
+      document.getElementById('editContractSaleDate').value = c.sale_date;
+      document.getElementById('editContractSalePrice').value = c.sale_price;
+      document.getElementById('editContractReceivingPrice').value = c.receiving_price;
+      document.getElementById('editContractInstallmentValue').value = c.installment_value;
+      document.getElementById('editContractPayingDay').value = c.paying_day;
+      document.getElementById('editContractFirstInstallment').value = c.first_installment;
+
+      editContractModal.show();
+    } catch (error) {
+      showToast(error.message, 'danger');
+    }
+  }
+
+  function openPayingModal(contractId = null) {
+    const id = contractId || document.getElementById('editContractId').value;
+    if (!id) {
+        showToast('Contract not loaded. Open a contract before adding a payment.', 'danger');
+        return;
+    }
+
+    const contract = allContracts.find(c => String(c.contract_id) === String(id));
+    if (!contract) {
+        showToast('Contract data not found. Refresh the contract list and try again.', 'danger');
+        return;
+    }
+
+    const client = allClients.find(c => String(c.client_id) === String(contract.client_id));
+    currentPayingContractId = contract.contract_id;
+
+    document.getElementById('payingContractId').value = contract.contract_id;
+    document.getElementById('payingClientId').value = contract.client_id;
+    document.getElementById('payingClientNameDisplay').textContent =
+        client ? client.client_name : `Client ID ${contract.client_id}`;
+    document.getElementById('payingContractIdDisplay').textContent =
+        `Contract #${contract.contract_id}`;
+    document.getElementById('payingClientAvatar').textContent =
+        client ? initials(client.client_name) : 'CL';
+    document.getElementById('payingAmount').value = '';
+    document.getElementById('payingDate').value = new Date().toISOString().slice(0, 10);
+    document.getElementById('payingNotice').value = '';
+    ['payingAmount', 'payingDate'].forEach(id => setFieldError(id, ''));
+
+    // Hide Edit Contract modal first
+    const editModalEl = document.getElementById('editContractModal');
+    const editModal = bootstrap.Modal.getInstance(editModalEl);
+
+    if (editModalEl.classList.contains("show") && editModal) {
+    editModal.hide();
+
+    editModalEl.addEventListener("hidden.bs.modal", function handler() {
+        payingModal.show();
+        loadPayingsForCurrentContract();
+        editModalEl.removeEventListener("hidden.bs.modal", handler);
+    }, { once: true });
+    } else {
+        // Edit modal isn't open, just open Payments normally
+        payingModal.show();
+        loadPayingsForCurrentContract();
+    }
+}
+  // ---------- Payment history: load, render, edit, delete ----------
+  function renderPayingsSkeleton() {
+    document.getElementById('payingsListContainer').innerHTML = `
+      <table><tbody>
+        <tr class="skeleton-row"><td colspan="4"><div class="skeleton-bar"></div></td></tr>
+        <tr class="skeleton-row"><td colspan="4"><div class="skeleton-bar"></div></td></tr>
+      </tbody></table>
+    `;
+  }
+
+  async function loadPayingsForCurrentContract() {
+    if (!currentPayingContractId) return;
+    renderPayingsSkeleton();
+    try {
+      const response = await fetch(`${PAYING_API_URL}/`);
+      if (!response.ok) throw new Error('Failed to load payments.');
+      const all = await response.json();
+      currentPayings = all.filter(p => String(p.contract_id) === String(currentPayingContractId));
+      displayPayings(currentPayings);
+    } catch (error) {
+      showToast(error.message, 'danger');
+      document.getElementById('payingsListContainer').innerHTML = '';
+    }
+  }
+
+  function displayPayings(payings) {
+    const container = document.getElementById('payingsListContainer');
+
+    if (!payings || payings.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state" style="padding:30px 20px;">
+          <div class="icon-wrap" style="width:48px;height:48px;font-size:1.1rem;"><i class="fas fa-receipt"></i></div>
+          <h4 style="font-size:.92rem;">No payments yet</h4>
+          <p style="font-size:.82rem;">Payments recorded for this contract will appear here.</p>
+        </div>
+      `;
+      return;
+    }
+
+    let html = `
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Notice</th>
+            <th style="text-align:right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    payings.forEach(p => {
+      html += `
+        <tr>
+          <td class="mono">${escapeHtml(p.paying_date)}</td>
+          <td>${escapeHtml(Number(p.paid_amount).toFixed(2))}</td>
+          <td class="addr-cell">${escapeHtml(p.notice || '')}</td>
+          <td>
+            <div class="row-actions" style="justify-content:flex-end;">
+              <button class="btn-icon" onclick="openEditPayingModal('${p.paying_id}')" title="Edit">
+                <i class="fas fa-pen"></i>
+              </button>
+              <button class="btn-icon danger" onclick="openPayingDeleteConfirm('${p.paying_id}')" title="Delete">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    });
+
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+  }
+
+  function openEditPayingModal(payingId) {
+    const payment = currentPayings.find(p => String(p.paying_id) === String(payingId));
+    if (!payment) {
+      showToast('Payment not found. Refresh and try again.', 'danger');
+      return;
+    }
+
+    document.getElementById('editPayingId').value = payment.paying_id;
+    document.getElementById('editPayingAmount').value = payment.paid_amount;
+    document.getElementById('editPayingDate').value = payment.paying_date;
+    document.getElementById('editPayingNotice').value = payment.notice || '';
+    ['editPayingAmount','editPayingDate'].forEach(id => setFieldError(id, ''));
+
+    editPayingModal.show();
+  }
+
+  async function updatePaying(event) {
+    event.preventDefault();
+    const id = document.getElementById('editPayingId').value;
+    const paidAmount = Number(document.getElementById('editPayingAmount').value);
+    const payingDate = document.getElementById('editPayingDate').value;
+    const notice = document.getElementById('editPayingNotice').value || '';
+
+    let valid = true;
+    ['editPayingAmount','editPayingDate'].forEach(id => setFieldError(id, ''));
+    if (Number.isNaN(paidAmount) || paidAmount <= 0) {
+      setFieldError('editPayingAmount', 'Enter a valid payment amount.');
+      valid = false;
+    }
+    if (!payingDate) {
+      setFieldError('editPayingDate', 'Select the payment date.');
+      valid = false;
+    }
+    if (!valid) {
+      showToast('Please fix the highlighted payment fields.', 'danger');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${PAYING_API_URL}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paid_amount: paidAmount, paying_date: payingDate, notice })
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(parseApiError(err, 'Failed to update payment.'));
+      }
+      editPayingModal.hide();
+      showToast('Payment updated successfully.', 'success');
+      loadPayingsForCurrentContract();
+      loadContracts();
+
+    } catch (error) {
+      showToast(error.message, 'danger');
+    }
+  }
+
+  function openPayingDeleteConfirm(payingId) {
+    pendingPayingDeleteId = payingId;
+    confirmPayingModal.show();
+  }
+
+  async function confirmPayingDelete() {
+    if (pendingPayingDeleteId == null) return;
+    try {
+      const response = await fetch(`${PAYING_API_URL}/${pendingPayingDeleteId}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Failed to delete payment.');
+      showToast('Payment removed.', 'success');
+      confirmPayingModal.hide();
+      loadPayingsForCurrentContract();
+      loadContracts();
+
+    } catch (error) {
+      showToast(error.message, 'danger');
+    } finally {
+      pendingPayingDeleteId = null;
+    }
+  }
+
+  async function createPaying(event) {
+    event.preventDefault();
+
+    const contractId = document.getElementById('payingContractId').value;
+    const clientId = document.getElementById('payingClientId').value;
+    const paidAmount = Number(document.getElementById('payingAmount').value);
+    const payingDate = document.getElementById('payingDate').value;
+    const notice = document.getElementById('payingNotice').value || '';
+
+    let valid = true;
+    ['payingAmount','payingDate'].forEach(id => setFieldError(id, ''));
+    if (Number.isNaN(paidAmount) || paidAmount <= 0) {
+      setFieldError('payingAmount', 'Enter a valid payment amount.');
+      valid = false;
+    }
+    if (!payingDate) {
+      setFieldError('payingDate', 'Select the payment date.');
+      valid = false;
+    }
+    if (!valid) {
+      showToast('Please fix the highlighted payment fields.', 'danger');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${PAYING_API_URL}/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paid_amount: paidAmount,
+          contract_id: Number(contractId),
+          client_id: String(clientId),
+          paying_date: payingDate,
+          notice,
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(parseApiError(err, 'Failed to save payment.'));
+      }
+
+      document.getElementById('createPayingForm').reset();
+      // .reset() also clears the hidden contract/client fields, so restore them
+      document.getElementById('payingContractId').value = contractId;
+      document.getElementById('payingClientId').value = clientId;
+      document.getElementById('payingDate').value = new Date().toISOString().slice(0, 10);
+      showToast('Payment recorded successfully.', 'success');
+      loadPayingsForCurrentContract();
+      loadContracts();
+    } catch (error) {
+      showToast(error.message || 'Failed to add payment.', 'danger');
+    }
+  }
+
+  async function updateContract(event) {
+    event.preventDefault();
+    const id = document.getElementById('editContractId').value;
+    const data = {
+      product_id: Number(document.getElementById('editContractProduct').value),
+      client_id: null, // client should not change via this form
+      sale_date: document.getElementById('editContractSaleDate').value,
+      sale_price: Number(document.getElementById('editContractSalePrice').value),
+      receiving_price: Number(document.getElementById('editContractReceivingPrice').value),
+      installment_value: Number(document.getElementById('editContractInstallmentValue').value),
+      paying_day: Number(document.getElementById('editContractPayingDay').value),
+      first_installment: document.getElementById('editContractFirstInstallment').value
+    };
+
+    try {
+      const response = await fetch(`${CONTRACT_API_URL}/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(parseApiError(err, 'Failed to update contract.'));
+      }
+      editContractModal.hide();
+      showToast('Contract updated.', 'success');
+      loadContracts();
+    } catch (error) {
+      showToast(error.message, 'danger');
+    }
+  }
+
+  function openContractDeleteConfirm(contractId) {
+    pendingContractDeleteId = contractId;
+    confirmContractModal.show();
+  }
+
+  async function confirmContractDelete() {
+    if (pendingContractDeleteId == null) return;
+    try {
+      const response = await fetch(`${CONTRACT_API_URL}/${pendingContractDeleteId}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Failed to delete contract.');
+      showToast('Contract removed.', 'success');
+      confirmContractModal.hide();
+      loadContracts();
+    } catch (error) {
+      showToast(error.message, 'danger');
+    } finally {
+      pendingContractDeleteId = null;
+    }
+  }
+
+
+
+let statementModal;
+// inside DOMContentLoaded:
+statementModal = new bootstrap.Modal(document.getElementById('statementModal'));
+
+const CLIENT_STATEMENT_API_URL = (id) => `${CLIENT_API_URL}/${id}/account-statement`;
+
+async function openAccountStatementModal(clientId) {
+  document.getElementById('statementContractsContainer').innerHTML = `
+    <div class="skeleton-bar" style="height:80px;"></div>
+  `;
+  statementModal.show();
+
+  try {
+    const response = await fetch(CLIENT_STATEMENT_API_URL(clientId));
+    if (!response.ok) throw new Error('Failed to load account statement.');
+    const data = await response.json();
+    currentStatementData = data; 
+    renderAccountStatement(data);
+  } catch (error) {
+    showToast(error.message, 'danger');
+    document.getElementById('statementContractsContainer').innerHTML = '';
+    statementModal.hide();
+  }
+}
+  
+
+  function downloadStatementPdf() {
+    if (!currentStatementData) {
+      showToast('No statement loaded to export.', 'danger');
+      return;
+    }
+
+    const { client, summary, contracts } = currentStatementData;
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const marginX = 40;
+    const contentWidth = pageWidth - marginX * 2;
+    let y = 50;
+
+    function checkPageBreak(neededSpace) {
+      if (y + neededSpace > 780) {
+        doc.addPage();
+        y = 50;
+      }
+    }
+
+    // ---- Header ----
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.setTextColor(20);
+    doc.text('Account Statement', marginX, y);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(120);
+    doc.text(`Generated ${new Date().toLocaleDateString()}`, pageWidth - marginX, y, { align: 'right' });
+    doc.setTextColor(20);
+
+    y += 30;
+
+    // ---- Client info block ----
+    const clientBoxHeight = 78;
+    doc.setFillColor(245, 246, 248);
+    doc.roundedRect(marginX, y, contentWidth, clientBoxHeight, 6, 6, 'F');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text(client.client_name, marginX + 14, y + 20);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(90);
+    doc.text(`Client ID: ${client.client_id}`, marginX + 14, y + 36);
+    doc.text(`Email: ${client.client_email || ''}`, marginX + 14, y + 50);
+    doc.text(`Phone: ${(client.phone_numbers || []).join(', ')}`, marginX + 14, y + 64);
+
+    doc.text(`Surety: ${client.surety} (${client.surety_num})`, marginX + 260, y + 36);
+    const addressLines = doc.splitTextToSize(`Address: ${client.address}`, contentWidth - 274);
+    doc.text(addressLines, marginX + 260, y + 50);
+
+    doc.setTextColor(20);
+    y += clientBoxHeight + 20;
+
+    // ---- Summary block ----
+    const summaryBoxHeight = 46;
+    const delayed = Number(summary.total_delayed) || 0;
+
+    doc.setFillColor(250, 251, 252);
+    doc.setDrawColor(228, 231, 236);
+    doc.roundedRect(marginX, y, contentWidth, summaryBoxHeight, 6, 6, 'FD');
+
+    const colWidth = contentWidth / 3;
+    const labelY = y + 18;
+    const valueY = y + 34;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(120);
+    doc.text('TOTAL PAID', marginX + 14, labelY);
+    doc.text('TOTAL REMAINING', marginX + colWidth + 14, labelY);
+    doc.text('DELAYED AMOUNT', marginX + colWidth * 2 + 14, labelY);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(18, 183, 106);
+    doc.text(Number(summary.total_paid).toFixed(2), marginX + 14, valueY);
+
+    doc.setTextColor(55, 93, 251);
+    doc.text(Number(summary.total_remaining).toFixed(2), marginX + colWidth + 14, valueY);
+
+    doc.setTextColor(delayed > 0 ? 240 : 20, delayed > 0 ? 68 : 20, delayed > 0 ? 56 : 20);
+    doc.text(delayed > 0 ? delayed.toFixed(2) : '—', marginX + colWidth * 2 + 14, valueY);
+
+    doc.setTextColor(20);
+    y += summaryBoxHeight + 26;
+
+    // ---- Contracts ----
+    if (!contracts || contracts.length === 0) {
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(10);
+      doc.setTextColor(120);
+      doc.text('This client has no contracts on record.', marginX, y);
+      doc.setTextColor(20);
+    } else {
+      contracts.forEach((ct) => {
+        checkPageBreak(90);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(20);
+        doc.text(`${ct.product_name}  —  Contract #${ct.contract_id}`, marginX, y);
+
+        const statusColor = ct.status === 'Late' ? [240, 68, 56] : [18, 183, 106];
+        doc.setFontSize(9);
+        doc.setTextColor(...statusColor);
+        doc.text(ct.status, pageWidth - marginX, y, { align: 'right' });
+        doc.setTextColor(20);
+
+        y += 18;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(70);
+
+        const ctDelay = Number(ct.delay_amount) || 0;
+        let detailLine = `Sale: ${Number(ct.sale_price).toFixed(2)}   Installment Amount: ${Number(ct.installment_amount).toFixed(2)}  Paid: ${Number(ct.total_paid).toFixed(2)}    Remaining: ${Number(ct.remaining_price).toFixed(2)} `;   
+        if (ctDelay > 0) detailLine += `    Delayed: ${ctDelay.toFixed(2)}`;
+        doc.text(detailLine, marginX, y);
+        doc.setTextColor(20);
+
+        y += 16; // ← the missing gap: push y below the text before the table starts
+
+        // payments table
+        const rows = (ct.payments || []).map(p => [
+          p.paying_date,
+          Number(p.paid_amount).toFixed(2),
+          p.notice || ''
+        ]);
+
+        if (rows.length > 0) {
+          doc.autoTable({
+            startY: y,
+            margin: { left: marginX, right: marginX },
+            head: [['Date', 'Amount', 'Notice']],
+            body: rows,
+            styles: { fontSize: 8, cellPadding: 5, textColor: [40, 40, 40] },
+            headStyles: { fillColor: [55, 93, 251], textColor: 255, fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: [250, 251, 252] },
+            theme: 'grid'
+          });
+          y = doc.lastAutoTable.finalY + 24;
+        } else {
+          doc.setFont('helvetica', 'italic');
+          doc.setFontSize(9);
+          doc.setTextColor(120);
+          doc.text('No payments recorded yet.', marginX, y);
+          doc.setTextColor(20);
+          y += 24;
+        }
+      });
+    }
+
+    const filename = `statement-${client.client_name}-${new Date().toISOString().slice(0, 10)}.pdf`;
+    doc.save(filename);
+    showToast('Statement downloaded as PDF.', 'success');
+}
+
+
+  function renderAccountStatement(data) {
+  const { client, summary, contracts } = data;
+
+  document.getElementById('statementClientName').textContent = client.client_name;
+  document.getElementById('statementClientId').textContent = `ID ${client.client_id}`;
+  document.getElementById('statementClientAvatar').textContent = initials(client.client_name);
+
+  document.getElementById('statementSummary').innerHTML = `
+    <div class="stat-card" style="--bar-color:var(--success)">
+      <div class="stat-label">Total paid</div>
+      <div class="stat-value">${Number(summary.total_paid).toFixed(2)}</div>
+    </div>
+    <div class="stat-card" style="--bar-color:var(--accent)">
+      <div class="stat-label">Total remaining</div>
+      <div class="stat-value">${Number(summary.total_remaining).toFixed(2)}</div>
+    </div>
+    <div class="stat-card" style="--bar-color:${summary.total_delayed > 0 ? 'var(--danger)' : 'var(--success)'}">
+      <div class="stat-label">Delayed amount</div>
+      <div class="stat-value" style="color:${summary.total_delayed > 0 ? 'var(--danger)' : 'var(--ink)'}">
+        ${summary.total_delayed > 0 ? Number(summary.total_delayed).toFixed(2) : '—'}
+      </div>
+    </div>
+  `;
+
+  const container = document.getElementById('statementContractsContainer');
+
+  if (!contracts || contracts.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state" style="padding:30px 20px;">
+        <div class="icon-wrap" style="width:48px;height:48px;font-size:1.1rem;"><i class="fas fa-file-contract"></i></div>
+        <h4 style="font-size:.92rem;">No contracts yet</h4>
+        <p style="font-size:.82rem;">This client has no contracts on record.</p>
+      </div>
+    `;
+    return;
+  }
+
+  let html = '';
+  contracts.forEach(ct => {
+  const statusColor = ct.status === 'Late' ? 'var(--danger)' : (ct.status === 'Completed' ? 'var(--text-muted)' : 'var(--success)');    const paymentsRows = (ct.payments || []).map(p => `
+      <tr>
+        <td class="mono">${escapeHtml(p.paying_date)}</td>
+        <td>${escapeHtml(Number(p.paid_amount).toFixed(2))}</td>
+        <td class="addr-cell">${escapeHtml(p.notice || '')}</td>
+      </tr>
+    `).join('');
+
+    html += `
+      <div class="panel" style="box-shadow:none;margin-bottom:18px;">
+        <div class="panel-header" style="padding:12px 16px;">
+          <h5 style="font-size:.9rem;">
+            <i class="fas fa-box-open"></i> ${escapeHtml(ct.product_name)}
+            <span class="client-id mono" style="margin-left:8px;">Contract #${ct.contract_id}</span>
+          </h5>
+          <span style="font-weight:700;color:${statusColor};font-size:.82rem;">
+            <i class="fas fa-circle" style="font-size:.6rem;"></i> ${escapeHtml(ct.status)}
+          </span>
+        </div>
+        <div class="panel-body" style="padding:14px 16px;">
+          <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:14px;font-size:.85rem;">
+            <div><span style="color:var(--text-muted);">Sale:</span> ${Number(ct.sale_price).toFixed(2)}</div>
+            <div><span style="color:var(--text-muted);">Installment Amount:</span> ${Number(ct.installment_amount).toFixed(2)} </div>
+            <div><span style="color:var(--success);font-weight:600;">Paid:</span> ${Number(ct.total_paid).toFixed(2)}</div>
+            <div><span style="color:var(--text-muted);">Remaining:</span> ${Number(ct.remaining_price).toFixed(2)}</div>
+            ${ct.delay_amount > 0 ? `
+              <div><span style="color:var(--danger);font-weight:600;">Delayed:</span> ${Number(ct.delay_amount).toFixed(2)}</div>
+            ` : ''}
+          </div>
+          ${paymentsRows ? `
+            <table>
+              <thead><tr><th>Date</th><th>Amount</th><th>Notice</th></tr></thead>
+              <tbody>${paymentsRows}</tbody>
+            </table>
+          ` : `<p style="color:var(--text-muted);font-size:.82rem;">No payments recorded yet.</p>`}
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+function formatMoney(n) {
+  return Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+async function loadDashboard() {
+  const ids = [
+    'dashTotalClients', 'dashTotalContracts', 'dashTotalProducts',
+    'dashTotalSales', 'dashCollected', 'dashRemaining',
+    'dashTodaysInstallments', 'dashOverdue', 'dashMonthlyProfit', 'dashMonthlyExpected'
+  ];
+  ids.forEach(id => document.getElementById(id).textContent = '…');
+
+  try {
+    const response = await fetch(`${DASHBOARD_API_URL}/stats`);
+    if (!response.ok) throw new Error('Failed to load dashboard stats.');
+    const stats = await response.json();
+
+    document.getElementById('dashTotalClients').textContent = stats.total_clients;
+    document.getElementById('dashTotalContracts').textContent = stats.total_contracts;
+    document.getElementById('dashTotalProducts').textContent = stats.total_products;
+    document.getElementById('dashTotalSales').textContent = formatMoney(stats.total_sales);
+    document.getElementById('dashCollected').textContent = formatMoney(stats.collected_amount);
+    document.getElementById('dashRemaining').textContent = formatMoney(stats.remaining_amount);
+    document.getElementById('dashTodaysInstallments').textContent = stats.todays_installments;
+    document.getElementById('dashOverdue').textContent = stats.overdue_installments;
+    document.getElementById('dashMonthlyProfit').textContent = formatMoney(stats.monthly_profit);
+    document.getElementById('dashMonthlyExpected').textContent = formatMoney(stats.monthly_expected_amount);
+
+
+    const monthLabel = new Date().toLocaleString(undefined, { month: 'long', year: 'numeric' });
+    document.getElementById('dashMonthLabelProfit').textContent = monthLabel;
+    document.getElementById('dashMonthLabelExpected').textContent = monthLabel;
+        
+  
+  } catch (error) {
+    showToast(error.message, 'danger');
+    ids.forEach(id => document.getElementById(id).textContent = '—');
+  }
+}
+</script>
+</body>
+</html>

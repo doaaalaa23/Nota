@@ -1,0 +1,174 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Nota — Sign In</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <style>
+    :root{
+      --bg:#F5F6F8; --card:#FFFFFF; --accent:#375DFB; --accent-soft:#EAEFFE;
+      --text:#101828; --text-muted:#667085; --border:#E4E7EC; --radius:14px;
+      --shadow: 0 1px 2px rgba(16,24,40,.04);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:'Inter',system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+
+    .center-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px}
+    .card{width:920px;max-width:100%;display:flex;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);background:var(--card);border:1px solid var(--border)}
+    .left{flex:1;padding:36px 40px;background:linear-gradient(180deg,var(--accent-soft),#f6f9ff);display:flex;flex-direction:column;justify-content:center;gap:16px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .mark{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#7C93FF);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800}
+    h2{margin:0;font-family:'Plus Jakarta Sans',sans-serif;font-size:1.4rem}
+    p.lead{margin:0;color:var(--text-muted)}
+
+    .right{width:380px;padding:34px 36px;display:flex;flex-direction:column;gap:18px;justify-content:center;align-items:center}
+    .g-signin{display:flex;justify-content:center}
+    .muted{font-size:.87rem;color:var(--text-muted);text-align:center}
+
+    .btn{display:inline-flex;align-items:center;gap:10px;border:none;padding:10px 14px;border-radius:10px;font-weight:700;cursor:pointer;font-family:'Inter'}
+    .btn-primary{background:var(--accent);color:#fff}
+    .btn-ghost{background:transparent;border:1.5px solid var(--border);color:var(--text-muted)}
+
+    #errorMsg{color:#F04438;font-size:.85rem;text-align:center;min-height:16px;}
+
+    .overlay{position:fixed;inset:0;background:rgba(2,6,23,.45);display:none;align-items:center;justify-content:center;z-index:50;}
+    .modal{background:var(--card);padding:22px;border-radius:12px;min-width:320px;max-width:420px;border:1px solid var(--border);box-shadow:var(--shadow)}
+    .modal h4{margin:0 0 6px 0}
+    .modal p{margin:0 0 14px;color:var(--text-muted);font-size:.87rem}
+    .modal input{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;margin-top:4px}
+    .modal .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+  </style>
+</head>
+<body>
+  <div class="center-wrap">
+    <div class="card" role="main">
+      <div class="left">
+        <div class="brand">
+          <div class="mark">N</div>
+          <div><div style="font-weight:800">Nota</div><small style="color:var(--text-muted)">Client &amp; Installment</small></div>
+        </div>
+        <h2>Welcome — Sign in to continue</h2>
+        <p class="lead">Sign in securely with your Google account.</p>
+      </div>
+
+      <div class="right">
+        <strong>Sign in</strong>
+        <div class="g-signin">
+          <div id="g_id_onload"
+               data-client_id="761237793141-7nrijklos2e1pi3tnnn9q0b75vul7o8i.apps.googleusercontent.com"
+               data-callback="handleCredentialResponse"></div>
+          <div class="g_id_signin" data-type="standard"></div>
+        </div>
+        <div id="errorMsg"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Optional balance modal — shown only right after first-time signup -->
+  <div id="overlay" class="overlay" role="dialog" aria-modal="true">
+    <div class="modal">
+      <h4>Set a starting balance</h4>
+      <p>This is optional — you can skip it and set it later.</p>
+      <label for="balance" style="font-size:.82rem;color:var(--text-muted);font-weight:600;">Balance</label>
+      <input id="balance" type="number" step="0.01" placeholder="e.g. 1250.00">
+      <div class="actions">
+        <button class="btn btn-ghost" onclick="skipBalance()">Skip</button>
+        <button class="btn btn-primary" onclick="saveBalance()">Save &amp; continue</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const AUTH_API_URL = 'http://127.0.0.1:8000/api/auth';
+
+    async function handleCredentialResponse(response) {
+      document.getElementById('errorMsg').textContent = '';
+      try {
+        const res = await fetch(`${AUTH_API_URL}/google`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id_token: response.credential })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          document.getElementById('errorMsg').textContent = data.detail || 'Sign in failed.';
+          return;
+        }
+
+        sessionStorage.setItem('access_token', data.access_token);
+        sessionStorage.setItem('user', JSON.stringify(data.user));
+        sessionStorage.setItem('user_id', data.user.user_id);
+
+        if (data.is_new) {
+          openBalancePrompt();
+        } else {
+          window.location.href = 'index.html';
+        }
+      } catch (err) {
+        document.getElementById('errorMsg').textContent = 'Could not reach the server.';
+      }
+    }
+
+    function openBalancePrompt() {
+      document.getElementById('overlay').style.display = 'flex';
+    }
+
+    function skipBalance() {
+      window.location.href = 'index.html';
+    }
+
+    async function saveBalance() {
+      const raw = document.getElementById('balance').value.trim();
+      if (raw === '') { skipBalance(); return; }
+
+      const balance = Number(raw);
+      if (Number.isNaN(balance)) {
+        alert('Please enter a valid number, or click Skip.');
+        return;
+      }
+
+      try {
+        const token = sessionStorage.getItem('access_token');
+        const res = await fetch(`${AUTH_API_URL}/balance`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ balance })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          const stored = JSON.parse(sessionStorage.getItem('user') || '{}');
+          stored.balance = data.balance;
+          sessionStorage.setItem('user', JSON.stringify(stored));
+        }
+      } catch (err) {
+        // non-blocking: balance is optional, proceed regardless
+      }
+
+      window.location.href = 'index.html';
+    }
+
+    // Already signed in? Skip straight to the app.
+    (function () {
+      if (sessionStorage.getItem('access_token')) {
+        window.location.href = 'index.html';
+      }
+    })();
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') skipBalance();
+    });
+
+    window.handleCredentialResponse = handleCredentialResponse;
+  </script>
+</body>
+</html>
