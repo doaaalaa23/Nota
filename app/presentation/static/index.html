@@ -1284,12 +1284,13 @@
 </div>
 
 <script>
-  const AUTH_API_URL = 'http://127.0.0.1:8000/api/auth';
-  const CLIENT_API_URL = 'http://127.0.0.1:8000/api/clients';
-  const PRODUCT_API_URL = 'http://127.0.0.1:8000/api/products';
-  const CONTRACT_API_URL = 'http://127.0.0.1:8000/api/contracts';
-  const PAYING_API_URL = 'http://127.0.0.1:8000/api/payings';
-  const DASHBOARD_API_URL = 'http://127.0.0.1:8000/api/dashboard';
+  const API_URL = "https://nota-doaa-team.vercel.app/";
+  const AUTH_API_URL = `${API_URL}api/auth`;
+  const CLIENT_API_URL = `${API_URL}api/clients`;
+  const PRODUCT_API_URL = `${API_URL}api/products`;
+  const CONTRACT_API_URL = `${API_URL}api/contracts`;
+  const PAYING_API_URL = `${API_URL}api/payings`;
+  const DASHBOARD_API_URL = `${API_URL}api/dashboard`;
 
   function getAuthToken() {
     return sessionStorage.getItem('access_token') || '';
