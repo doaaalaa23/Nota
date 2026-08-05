@@ -33,7 +33,7 @@ async def validation_exception_handler(request, exc):
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Change to specific domains in production
+    allow_origins=[" https://nota.doaaalaa237.workers.dev"],  # Change to specific domains in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
