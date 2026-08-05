@@ -4,6 +4,6 @@ uvicorn==0.51.0
 sqlalchemy==2.0.51
 python-jose==3.5.0
 google-auth==2.56.2
-google.auth.transport==1.2.0
+google-auth-oauthlib==1.2.0
 python-dotenv==1.2.2
 python-dateutil==2.9.0.post0
