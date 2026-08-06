@@ -2,8 +2,6 @@
 
 An installment management system that helps business owners manage clients, products, and installment contracts in one place, track payments and outstanding balances, and monitor overall sales and profit through a live dashboard.
 
-![Homepage](screenshots/home_page.PNG)
-
 ![Status](https://img.shields.io/badge/status-active-success?style=for-the-badge)
 ![Backend](https://img.shields.io/badge/backend-FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 ![Database](https://img.shields.io/badge/database-Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
@@ -83,6 +81,26 @@ Business owners who sell on installment plans often track clients, products, con
 
 ---
 
+## 🏛 Architecture
+
+Nota follows **Clean Architecture** principles to keep the codebase organized, testable, and easy to maintain as it grows. Each layer has a single responsibility and depends only on the layers beneath it — business logic stays independent from frameworks, databases, and UI details.
+
+```
+app/
+│
+├── domain/            # Core business rules — entities, value objects, and interfaces. No external dependencies.
+├── application/        # Use cases / business logic that orchestrates the domain layer.
+├── infrastructure/     # Implementation details — database (Supabase), external services, repositories.
+└── presentation/        # API routes, request/response models, and UI-facing logic (FastAPI).
+```
+
+**Why Clean Architecture?**
+- 🔄 Business logic is decoupled from FastAPI and Supabase — either can be swapped with minimal impact
+- 🧪 Core domain logic can be tested in isolation, without a database or web server
+- 📦 Clear boundaries make the codebase easier to navigate and extend as features grow
+
+---
+
 ## 🚀 Getting Started
 
 ### Prerequisites
@@ -93,7 +111,7 @@ Business owners who sell on installment plans often track clients, products, con
 ### Installation
 
 ```bash
-git clone https://github.com/doaaalaa23/nota.git
+git clone https://github.com/<your-username>/nota.git
 cd nota
 ```
 
@@ -134,13 +152,11 @@ nota/
 ├── main.py
 ├── requirements.txt
 ├── LICENSE
-├── src/
-│   ├── auth/
-│   ├── clients/
-│   ├── products/
-│   ├── contracts/
-│   ├── payments/
-│   └── dashboard/
+├── app/
+│   ├── domain/
+│   ├── application/
+│   ├── infrastructure/
+│   └── presentation/
 │
 ├── screenshots/
 │   ├── home_page.PNG
@@ -172,7 +188,7 @@ The complete project documentation is available in the [`docs`](docs) folder.
 
 ## 📜 License
 
-This project was created by me. All rights reserved — this project is not open source. It is available for display and for purchase; please contact me for licensing or purchase inquiries.
+This project was developed for educational and academic purposes. No license has been specified at this time.
 
 ---
 
