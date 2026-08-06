@@ -1,96 +1,89 @@
-<div align="center">
-
 # 💳 Nota — Installment Management System
 
-**Manage clients, products, and installment contracts — all in one place.**
+An installment management system that helps business owners manage clients, products, and installment contracts in one place, track payments and outstanding balances, and monitor overall sales and profit through a live dashboard.
 
-Track balances automatically, gate contract creation on available capital, and watch your business health on a live dashboard.
-
-[![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
-[![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/HTML)
-[![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)](https://developer.mozilla.org/en-US/docs/Web/CSS)
-[![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
-
-[![Status](https://img.shields.io/badge/status-active-success?style=flat-square)](.)
-[![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square)](.)
-
-</div>
+![Status](https://img.shields.io/badge/status-active-success?style=for-the-badge)
+![Backend](https://img.shields.io/badge/backend-FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![Database](https://img.shields.io/badge/database-Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
+![Responsive](https://img.shields.io/badge/UI-responsive-blueviolet?style=for-the-badge)
 
 ---
 
-## 📖 About
+## 📖 Overview
 
-**Nota** replaces messy manual spreadsheets with a single, consistent system for businesses that sell on installment plans. Add clients and products, create contracts, record payments, and let Nota automatically track your balance — increasing it as clients pay, and decreasing it whenever a new contract is funded. A built-in balance check stops you from over-committing capital you don't have.
+Business owners who sell on installment plans often track clients, products, contracts, and payments manually. This makes it difficult to know who owes what, which installments are due or overdue, and how the business is performing overall.
 
-> 📌 **Note:** Filtration is out of scope for this version. Search is available for clients and products only.
+**Nota** replaces this manual tracking with a single, consistent system — letting the user manage clients, products, and contracts, search for clients and products, record payments, and automatically track their available balance, all from one dashboard.
 
 ---
 
 ## ✨ Features
 
-- 🔐 **Secure Authentication** — sign up and log in with validated, hashed credentials
-- 👥 **Client Management** — add, edit, delete, and view client records
-- 📦 **Product Management** — add, edit, delete, and view product records
-- 🔍 **Search** — quickly find clients and products
-- 💰 **Smart Balance Tracking** — set your balance at sign-up, top it up anytime
-- 📄 **Contract Management** — link clients and products into installment contracts
-- 🚦 **Balance Gate** — contracts are only created if your balance can cover them
-- 💵 **Payments** — record client payments against contracts, balance updates instantly
-- 📊 **Live Dashboard** — sales, collections, remaining amounts, due/overdue installments, monthly profit, and expected income at a glance
+### 🔐 Secure Authentication
+- Sign up and log in securely
+- Hashed credentials and validation mechanism
 
----
+### 👥 Client Management
+- Add, edit, delete, and view clients
+- Dedicated clients admin page connected to the database
 
-## 🖼️ Screenshots
+### 📦 Product Management
+- Add, edit, delete, and view products
+- Dedicated products admin page connected to the database
 
-<div align="center">
+### 🔍 Search
+- Search mechanism for clients
+- Search mechanism for products
 
-### 🏠 Home Page
-<img src="screenshots/home_page.PNG" alt="Home Page" width="800"/>
+### 💰 Balance Management
+- Set your balance at sign-up
+- Edit or top up your balance at any time
+- Balance stored and tracked automatically
+
+### 📄 Contract Management
+- Add, edit, delete, and view contracts linking clients and products
+- Balance check before allowing contract creation
+- Balance decreases automatically by the contract's remaining amount
+
+### 💵 Payments & Balance Tracking
+- Record payments a client makes against a contract
+- Edit existing payment records
+- Balance increases automatically when a payment is recorded
 
 ### 📊 Dashboard
-<img src="screenshots/dashboard.PNG" alt="Dashboard" width="800"/>
-
-### ➕ Create Client
-<img src="screenshots/create_client.PNG" alt="Create Client" width="800"/>
-
-### 💰 Balance
-<img src="screenshots/balance.PNG" alt="Balance" width="800"/>
-
-</div>
+- Total clients, products, and contracts
+- Sales, collected amount, and remaining amount
+- Installments due today and overdue installments
+- Monthly profit and expected amount
 
 ---
 
-## 🛠️ Tech Stack
+## 📸 Application Preview
 
-| Layer | Technology |
+| Home Page | Dashboard |
+|---|---|
+| <img src="screenshots/home_page.PNG" width="380"/> | <img src="screenshots/dashboard.PNG" width="380"/> |
+
+| Create Client | Balance |
+|---|---|
+| <img src="screenshots/create_client.PNG" width="380"/> | <img src="screenshots/balance.PNG" width="380"/> |
+
+---
+
+## 🛠 Technology Stack
+
+| Category | Technologies |
 |---|---|
 | **Backend** | Python, FastAPI |
 | **Database** | Supabase (PostgreSQL) |
-| **Frontend** | HTML, CSS, JavaScript |
-| **Deployment** | Cloud-hosted |
-
----
-
-## 📂 Project Documentation
-
-Full project documentation lives in the [`docs/`](docs) folder:
-
-| Document | Description |
-|---|---|
-| 📃 [`Nota_Brief.pdf`](docs/Nota_Brief.pdf) | Project brief — purpose, problem statement, and proposed solution |
-| 📋 [`Nota_BRD.pdf`](docs/Nota_BRD.pdf) | Business Requirements Document — objectives, scope, KPIs, and timeline |
-| 🧩 [`Nota_PRD.pdf`](docs/Nota_PRD.pdf) | Product Requirements Document — user stories, functional & non-functional requirements |
-| 🗂️ [`Nota_action_plan.pdf`](docs/Nota_action_plan.pdf) | Hierarchical action plan — epics, stories, and tasks |
+| **Frontend** | HTML5, CSS3, JavaScript |
+| **Security** | Hashed credentials, request validation |
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-
 - Python 3.11+
 - A [Supabase](https://supabase.com/) project (URL + API key)
 - pip / virtualenv
@@ -98,70 +91,89 @@ Full project documentation lives in the [`docs/`](docs) folder:
 ### Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/<your-username>/nota.git
+git clone https://github.com/doaaalaa23/nota.git
 cd nota
+```
 
-# Create a virtual environment
+Create a virtual environment and install dependencies:
+
+```bash
 python -m venv venv
 source venv/bin/activate   # On Windows: venv\Scripts\activate
 
-# Install dependencies
 pip install -r requirements.txt
 ```
 
-### Environment Variables
-
-Create a `.env` file in the project root:
+Create a `.env` file:
 
 ```env
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_api_key
-SECRET_KEY=your_secret_key
+SUPABASE_URL=YOUR_SUPABASE_URL
+SUPABASE_KEY=YOUR_SUPABASE_API_KEY
+SECRET_KEY=YOUR_SECRET_KEY
 ```
 
-### Run Locally
+> ⚠️ Never commit your `.env` file or API keys to GitHub.
+
+Run locally:
 
 ```bash
 uvicorn main:app --reload
 ```
 
-The app will be available at `http://127.0.0.1:8000` 🎉
+The app will be available at `http://127.0.0.1:8000`
 
 ---
 
-## ☁️ Deployment
+## 📂 Project Structure
 
-Nota is deployed and ready for production use. Update the badge/link below with your live URL:
-
-[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen?style=for-the-badge&logo=vercel&logoColor=white)](https://your-deployment-url.com)
+```
+nota/
+│
+├── main.py
+├── requirements.txt
+├── LICENSE
+├── src/
+│   ├── auth/
+│   ├── clients/
+│   ├── products/
+│   ├── contracts/
+│   ├── payments/
+│   └── dashboard/
+│
+├── screenshots/
+│   ├── home_page.PNG
+│   ├── dashboard.PNG
+│   ├── create_client.PNG
+│   └── balance.PNG
+│
+├── docs/
+│   ├── Nota_Brief.pdf
+│   ├── Nota_BRD.pdf
+│   ├── Nota_PRD.pdf
+│   └── Nota_action_plan.pdf
+│
+└── README.md
+```
 
 ---
 
-## 🗺️ Roadmap
+## 📄 Documentation
 
-- [ ] Filtration mechanism
-- [ ] Due-date notifications
-- [ ] Client-facing external access
-- [ ] Online/external payment processing
+The complete project documentation is available in the [`docs`](docs) folder.
 
----
-
-## 🤝 Contributing
-
-Contributions, issues, and feature requests are welcome!
-Feel free to check the [issues page](../../issues) or open a pull request.
+- 📘 [Project Brief](docs/Nota_Brief.pdf)
+- 📗 [Business Requirements Document (BRD)](docs/Nota_BRD.pdf)
+- 📙 [Product Requirements Document (PRD)](docs/Nota_PRD.pdf)
+- 📕 [Action Plan](docs/Nota_action_plan.pdf)
 
 ---
 
-## 📄 License
+## 📜 License
 
-This project is licensed under the **MIT License**.
+This project was developed for educational and academic purposes. No license has been specified at this time.
 
 ---
 
-<div align="center">
+⭐ If you found this project interesting, consider giving it a star!
 
-Made with ❤️ for business owners who deserve better than spreadsheets.
-
-</div>
+Built with ❤️ using Python, FastAPI, Supabase, HTML, CSS, and JavaScript
