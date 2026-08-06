@@ -2,6 +2,8 @@
 
 An installment management system that helps business owners manage clients, products, and installment contracts in one place, track payments and outstanding balances, and monitor overall sales and profit through a live dashboard.
 
+![Homepage](screenshots/home_page.PNG)
+
 ![Status](https://img.shields.io/badge/status-active-success?style=for-the-badge)
 ![Backend](https://img.shields.io/badge/backend-FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 ![Database](https://img.shields.io/badge/database-Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
