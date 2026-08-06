@@ -11,6 +11,7 @@ from app.presentation.routes.auth_routes import router as auth_router
 from app.infrastructure.database.database import init_db
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -80,18 +81,9 @@ app.include_router(auth_router)
 @app.get("/")
 async def root():
     """
-    Root endpoint - redirects to the frontend page.
-    
-    Returns:
-        Welcome message with link to frontend
+    Root endpoint - serves the public landing page.
     """
-    return {
-        "message": "Welcome to Installment System API",
-        "version": "1.0.0",
-        "status": "running",
-        "frontend": "/static/index.html",
-        "docs": "/docs"
-    }
+    return FileResponse(static_path / "landing.html")
 
 
 # Health check endpoint
