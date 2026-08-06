@@ -188,7 +188,7 @@ The complete project documentation is available in the [`docs`](docs) folder.
 
 ## 📜 License
 
-This project was developed for educational and academic purposes. No license has been specified at this time.
+This project was created by me. All rights reserved — this project is not open source. It is available for display and for purchase; please contact me for licensing or purchase inquiries.
 
 ---
 
