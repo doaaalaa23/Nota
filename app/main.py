@@ -11,10 +11,10 @@ from app.presentation.routes.dashboard_routes import router as dashboard_router
 from app.presentation.routes.auth_routes import router as auth_router
 from app.presentation.routes.notification_routes import router as notification_router
 from app.infrastructure.database.database import init_db
-from app.infrastructure.database.session import get_session
-from app.infrastructure.models.user_model import UserTable
-from app.infrastructure.notifications.email_notification_service import EmailNotificationService
-from app.infrastructure.repositories.notifi_user_impl import NotificationRepositoryImpl
+from app.scheduler.notification_scheduler import (
+    start_notification_scheduler,
+    stop_notification_scheduler,
+)
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.responses import FileResponse
@@ -29,40 +29,7 @@ app = FastAPI(
     openapi_url="/openapi.json"
 )
 
-notification_task: asyncio.Task | None = None
-
-
-def send_due_installment_emails() -> None:
-    email_service = EmailNotificationService()
-    if not email_service.is_configured:
-        print("Daily installment emails skipped: SMTP is not configured")
-        return
-
-    db = get_session()
-    try:
-        users = db.query(UserTable).filter(UserTable.is_active.is_(True)).all()
-        for user in users:
-            repository = NotificationRepositoryImpl(db, user.user_id)
-            notifications = repository.read_due_today(__import__("datetime").date.today())
-            if not notifications:
-                continue
-            try:
-                email_service.send_due_installment_email(
-                    recipient=user.email,
-                    user_name=user.user_name,
-                    notifications=notifications,
-                )
-                print(f"Sent installment email to {user.email}")
-            except Exception as exc:
-                print(f"Could not send installment email to {user.email}: {exc}")
-    finally:
-        db.close()
-
-
-async def notification_loop() -> None:
-    while True:
-        await asyncio.to_thread(send_due_installment_emails)
-        await asyncio.sleep(24 * 60 * 60)
+notification_scheduler = None
 
 
 @app.exception_handler(RequestValidationError)
@@ -94,8 +61,8 @@ async def startup_event():
     try:
         init_db()
         print("✓ Database initialized successfully")
-        global notification_task
-        notification_task = asyncio.create_task(notification_loop())
+        global notification_scheduler
+        notification_scheduler = start_notification_scheduler()
     except Exception as e:
         print(f"✗ Database initialization failed: {str(e)}")
 
@@ -105,8 +72,8 @@ async def shutdown_event():
     """
     Cleanup on application shutdown.
     """
-    if notification_task is not None:
-        notification_task.cancel()
+    if notification_scheduler is not None:
+        stop_notification_scheduler(notification_scheduler)
     print("✓ Application shutdown")
 
 
@@ -139,7 +106,7 @@ async def root():
 async def health_check():
     """
     Health check endpoint.
-    
+
     Returns:
         API health status
     """
@@ -154,11 +121,11 @@ async def health_check():
 async def global_exception_handler(request, exc):
     """
     Global exception handler for unhandled errors.
-    
+
     Args:
         request: HTTP request
         exc: Exception
-        
+
     Returns:
         Error response
     """
@@ -171,7 +138,7 @@ async def global_exception_handler(request, exc):
 
 if __name__ == "__main__":
     import uvicorn
-    
+
     uvicorn.run(
         "app.main:app",
         host="0.0.0.0",

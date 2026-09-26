@@ -1,6 +1,6 @@
 from datetime import date
-
-
+ 
+ 
 class UserNotification:
     def __init__(
         self,
